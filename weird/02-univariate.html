@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Univariate probability distributions – That's weird! Anomaly&nbsp;detection using&nbsp;R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./03-multivariate.html" rel="next">
+<link href="./01-intro.html" rel="prev">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-univariate.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">That’s weird! Anomaly&nbsp;detection using&nbsp;R</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-univariate.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-multivariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-boxplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-density.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-distance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-functional.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-network.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Network and graph data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-imagevideo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image and video data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-text.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Categorical and textual data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Spaces of probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-cybersecurity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Network intrusions and fraud</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bibliography</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix algebra</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title"><b>Sections</b></h2>
+   
+  <ul>
+  <li><a href="#sec-common" id="toc-sec-common" class="nav-link active" data-scroll-target="#sec-common"><span class="header-section-number">2.1</span> Common distributions</a>
+  <ul class="collapse">
+  <li><a href="#uniform-distribution" id="toc-uniform-distribution" class="nav-link" data-scroll-target="#uniform-distribution">Uniform distribution</a></li>
+  <li><a href="#normal-gaussian-distribution" id="toc-normal-gaussian-distribution" class="nav-link" data-scroll-target="#normal-gaussian-distribution">Normal (Gaussian) distribution</a></li>
+  <li><a href="#chi2-distribution" id="toc-chi2-distribution" class="nav-link" data-scroll-target="#chi2-distribution"><span class="math inline">\chi^2</span> distribution</a></li>
+  <li><a href="#t-distribution" id="toc-t-distribution" class="nav-link" data-scroll-target="#t-distribution">t distribution</a></li>
+  <li><a href="#gamma-distribution" id="toc-gamma-distribution" class="nav-link" data-scroll-target="#gamma-distribution"><span class="math inline">\Gamma</span> distribution</a></li>
+  <li><a href="#mixture-distributions" id="toc-mixture-distributions" class="nav-link" data-scroll-target="#mixture-distributions">Mixture distributions</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further reading</a></li>
+  </ul></li>
+  <li><a href="#sec-clt" id="toc-sec-clt" class="nav-link" data-scroll-target="#sec-clt"><span class="header-section-number">2.2</span> Central limit theorem</a></li>
+  <li><a href="#sec-quantiles" id="toc-sec-quantiles" class="nav-link" data-scroll-target="#sec-quantiles"><span class="header-section-number">2.3</span> Quantiles</a></li>
+  <li><a href="#sec-sample-quantiles" id="toc-sec-sample-quantiles" class="nav-link" data-scroll-target="#sec-sample-quantiles"><span class="header-section-number">2.4</span> Sample quantiles</a>
+  <ul class="collapse">
+  <li><a href="#the-quantile-function" id="toc-the-quantile-function" class="nav-link" data-scroll-target="#the-quantile-function">The <code>quantile()</code> function</a></li>
+  <li><a href="#example-test-cricket-batting-averages" id="toc-example-test-cricket-batting-averages" class="nav-link" data-scroll-target="#example-test-cricket-batting-averages">Example: Test cricket batting averages</a></li>
+  <li><a href="#sample-quantile-distribution" id="toc-sample-quantile-distribution" class="nav-link" data-scroll-target="#sample-quantile-distribution">Sample quantile distribution</a></li>
+  </ul></li>
+  <li><a href="#sec-hdr" id="toc-sec-hdr" class="nav-link" data-scroll-target="#sec-hdr"><span class="header-section-number">2.5</span> Highest density regions</a></li>
+  <li><a href="#sec-robust-univariate" id="toc-sec-robust-univariate" class="nav-link" data-scroll-target="#sec-robust-univariate"><span class="header-section-number">2.6</span> Robust estimation</a></li>
+  <li><a href="#sec-kde" id="toc-sec-kde" class="nav-link" data-scroll-target="#sec-kde"><span class="header-section-number">2.7</span> Univariate kernel density estimation</a>
+  <ul class="collapse">
+  <li><a href="#kernel-density-estimates" id="toc-kernel-density-estimates" class="nav-link" data-scroll-target="#kernel-density-estimates">Kernel density estimates</a></li>
+  <li><a href="#statistical-properties" id="toc-statistical-properties" class="nav-link" data-scroll-target="#statistical-properties">Statistical properties</a></li>
+  <li><a href="#bandwidth-selection" id="toc-bandwidth-selection" class="nav-link" data-scroll-target="#bandwidth-selection">Bandwidth selection</a></li>
+  <li><a href="#highest-kernel-density-regions" id="toc-highest-kernel-density-regions" class="nav-link" data-scroll-target="#highest-kernel-density-regions">Highest kernel density regions</a></li>
+  </ul></li>
+  <li><a href="#sec-evt" id="toc-sec-evt" class="nav-link" data-scroll-target="#sec-evt"><span class="header-section-number">2.8</span> Extreme value theory</a>
+  <ul class="collapse">
+  <li><a href="#the-generalized-pareto-distribution" id="toc-the-generalized-pareto-distribution" class="nav-link" data-scroll-target="#the-generalized-pareto-distribution">The Generalized Pareto Distribution</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-27933797-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-27933797-2');
+  gtag('config', 'G-JKBLG3XQGY')
+</script>
+<link href="https://fonts.googleapis.com/css?family=Fira+Sans|Noto+Serif" rel="stylesheet">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack-subset.css">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-univariate" class="quarto-section-identifier"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In this book, we take a probabilistic perspective on anomaly detection. That is, we are interested in the likelihood of each observation. So before we discuss any anomaly detection methods, we first need to discuss probability distributions. Some of this material (especially <a href="#sec-common" class="quarto-xref"><span>Section 2.1</span></a>) should be familiar to most readers, but is covered here as a refresher, and to introduce some notation that will be used in later chapters.</p>
+<p>We are interested in data obtained from a range of possible sample spaces in this book, but for now we will assume that all data are real numbers, and come from continuous probability distributions. Later we will consider other types of data, including discrete data, data that are functions, images, video, networks, text, or even probability distributions as data objects. But for the first half of the book, we will only deal with numerical data.</p>
+<section id="sec-common" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="sec-common"><span class="header-section-number">2.1</span> Common distributions</h2>
+<p>Let <span class="math inline">Y</span> denote a continuous random variable taking values in <span class="math inline">\mathbb{R}</span> (the real numbers), with its cumulative probability distribution (cdf) given by <span id="eq-cdf"><span class="math display">F(y) = \text{Pr}(Y \le y).
+\tag{2.1}</span></span> This function is monotonically increasing in <span class="math inline">y</span>, and takes values between 0 and 1. Because <span class="math inline">Y</span> is a continuous random variable, <span class="math inline">F(y)</span> is a continuous function of <span class="math inline">y</span>. The probability density function (pdf) is defined as the derivative of the cdf, so <span class="math inline">f(y) = F'(y)</span>, assuming the derivative exists at <span class="math inline">y</span>. The pdf is non-negative, and integrates to 1.</p>
+<p>The probability that <span class="math inline">Y</span> lies in the interval <span class="math inline">[a,b]</span> is given by <span class="math inline">\text{Pr}(a \leq Y \leq b) = \int_a^b f(y)dy = F(b) - F(a)</span>.</p>
+<p>The expected value (or mean) of <span class="math inline">Y</span> is given by <span class="math display">
+\text{E}(Y) = \int_{-\infty}^\infty y f(y)dy,
+</span> and the variance is given by <span class="math display">
+\text{Var}(Y) = \text{E}[(Y-\text{E}(Y))^2] = \int_{-\infty}^\infty (y-\text{E}(Y))^2 f(y)dy.
+</span> The standard deviation is the square root of the variance.</p>
+<section id="uniform-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="uniform-distribution">Uniform distribution</h3>
+<p>The simplest continuous distribution is the <strong>Uniform</strong> distribution, which takes two parameters, <span class="math inline">a</span> and <span class="math inline">b</span>, and has pdf given by <span class="math display">
+  f(y;a,b) = \begin{cases}
+    \frac{1}{b-a} &amp; \text{if } a \leq y \leq b, \\
+    0 &amp; \text{otherwise}.
+  \end{cases}
+</span> Thus, it can only take values between <span class="math inline">a</span> and <span class="math inline">b</span>, and every value in that range is equally likely. We refer to a Uniform random variable with parameters <span class="math inline">a</span> and <span class="math inline">b</span> as <span class="math inline">Y \sim \text{U}(a,b)</span>. It has mean <span class="math inline">(a+b)/2</span> and variance <span class="math inline">(b-a)^2/12</span>.</p>
+<p>The U(0,1) distribution is shown in <a href="#fig-uniform" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_uniform</span>(<span class="dv">0</span>,<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-uniform" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-uniform-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-uniform-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-uniform-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Probability density function for a U(0,1) distribution. The mean is 0.5 and the variance is 1/12.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="normal-gaussian-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="normal-gaussian-distribution">Normal (Gaussian) distribution</h3>
+<p>The most widely used continuous distribution is the <strong>Normal</strong> distribution, also known as the <strong>Gaussian</strong> distribution, named after the German mathematician Carl Friedrich Gauss. It takes two parameters, the mean <span class="math inline">\mu</span>, and the variance, <span class="math inline">\sigma^2</span>. The pdf is given by <span class="math display">
+  f(y; \mu, \sigma) = \frac{1}{\sigma\sqrt{2\pi}} \exp\left(-\frac{(y-\mu)^2}{2\sigma^2}\right).
+</span> We refer to a Normal random variable with mean <span class="math inline">\mu</span> and variance <span class="math inline">\sigma^2</span> as <span class="math inline">Y \sim \text{N}(\mu, \sigma^2)</span>. When <span class="math inline">\mu=0</span> and <span class="math inline">\sigma^2=1</span>, we call it the <strong>standard Normal</strong> distribution N(0,1), and denote the pdf as <span class="math inline">\phi(y)</span> and the cdf as <span class="math inline">\Phi(y)</span>.</p>
+<p>Three Normal distributions are shown in <a href="#fig-normal" class="quarto-xref">Figure&nbsp;<span>2.2</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_normal</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-normal" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-normal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-normal-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-normal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: Probability density functions for three Normal distributions. The mean <span class="math inline">\mu</span> controls the location of the distribution, while the variance <span class="math inline">\sigma^2</span> controls the spread.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="chi2-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="chi2-distribution"><span class="math inline">\chi^2</span> distribution</h3>
+<p>The <span class="math inline">\chi^2</span> (or <strong>chi-squared</strong>) distribution takes one parameter, the degrees of freedom <span class="math inline">k</span>. The pdf is given by <span class="math display">
+  f_k(y) = \frac{y^{k/2-1}e^{-y/2}}{2^{k/2}\Gamma(k/2)},
+</span> where <span class="math inline">\Gamma(u) = \int_0^\infty x^{u-1}e^{-x}dx</span> is the gamma function. For positive integers <span class="math inline">u</span>, <span class="math inline">\Gamma(u) = (u-1)!</span>. The <span class="math inline">\chi^2</span> distribution arises naturally as the sum of the squares of <span class="math inline">k</span> independent standard Normal random variables. We refer to a <span class="math inline">\chi^2</span> random variable with <span class="math inline">k</span> degrees of freedom as <span class="math inline">Y \sim \chi^2_k</span>. It has mean <span class="math inline">k</span> and variance <span class="math inline">2k</span>.</p>
+<p>Three <span class="math inline">\chi^2</span> distributions are shown in <a href="#fig-chisq" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_chisq</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>) <span class="sc">+</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_discrete</span>(<span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$</span><span class="sc">\\</span><span class="st">chi^{~2}_{~~1}$"</span>),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$</span><span class="sc">\\</span><span class="st">chi^{~2}_{~~2}$"</span>),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$</span><span class="sc">\\</span><span class="st">chi^{~2}_{~~5}$"</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-chisq" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-chisq-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-chisq-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-chisq-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.3: Probability density functions for three <span class="math inline">\chi^2</span> distributions. As the degrees of freedom <span class="math inline">k</span> increases, the distribution becomes more symmetric, and converges to the Normal distribution <span class="math inline">N(k,2k)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="t-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="t-distribution">t distribution</h3>
+<p>The <strong>t</strong> distribution was first described by the English statistician and chemist, William Gosset, who worked for the Guinness brewery in Dublin, Ireland, and published under the pseudonym “Student”. It arises naturally as the ratio <span class="math inline">Z/\sqrt{S/k}</span>, where <span class="math inline">Z\sim \text{N}(0,1)</span> and <span class="math inline">S\sim \chi^2_k</span> are independent, and is commonly used in variations of <span class="math inline">t</span>-tests. It takes one parameter, the degrees of freedom <span class="math inline">k</span>. The pdf is given by <span class="math display">
+  f_k(y) = \frac{\Gamma\left(\frac{k+1}{2}\right)}{\sqrt{k\pi}\Gamma\left(\frac{k}{2}\right)}
+  \left(1 + \frac{y^2}{k}\right)^{-\frac{k+1}{2}}.
+</span> We refer to a t random variable with <span class="math inline">k</span> degrees of freedom as <span class="math inline">Y \sim \text{t}_k</span>. The t distribution is similar in shape to the standard Normal distribution, but has heavier tails. When <span class="math inline">k=1</span>, the t distribution is known as the “Cauchy” distribution (after the French mathematician Augustin-Louis Cauchy), which has undefined mean and variance. For <span class="math inline">k=2</span>, it has mean 0 and infinite variance. For <span class="math inline">k &gt; 2</span>, it has mean <span class="math inline">0</span> and variance <span class="math inline">k/(k-2)</span>. When <span class="math inline">k\rightarrow\infty</span>, the t distribution converges to the standard Normal distribution.</p>
+<p>Three t distributions are shown in <a href="#fig-t" class="quarto-xref">Figure&nbsp;<span>2.4</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_student_t</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">99</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>(<span class="at">ngrid =</span> <span class="dv">10001</span>) <span class="sc">+</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">8</span>,<span class="dv">8</span>)) <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>) <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_discrete</span>(<span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$t_{~1}$"</span>),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$t_{~5}$"</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$t_{~99}$"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-t" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-t-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-t-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-t-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.4: Probability density functions for three <span class="math inline">t</span> distributions. As the degrees of freedom <span class="math inline">k</span> increases, the distribution converges to a N(0,1) distribution.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="gamma-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="gamma-distribution"><span class="math inline">\Gamma</span> distribution</h3>
+<p>The <span class="math inline">\Gamma</span> (or <strong>Gamma</strong>) distribution is a generalization of the <span class="math inline">\chi^2</span> distribution, and is used in many statistical models. There are several parameterizations. Here, we use the shape/rate parameterization which uses the shape <span class="math inline">\alpha</span> and the rate <span class="math inline">\beta</span>. The pdf is given by <span class="math display">
+  f(y; \alpha, \beta) = \frac{\beta^\alpha}{\Gamma(\alpha)} y^{\alpha-1}e^{-\beta y}.
+</span> We refer to a <span class="math inline">\Gamma</span> random variable with shape <span class="math inline">\alpha</span> and rate <span class="math inline">\beta</span> as <span class="math inline">Y \sim \Gamma(\alpha, \beta)</span>. The mean and variance of a <span class="math inline">\Gamma</span> random variable are <span class="math inline">\alpha/\beta</span> and <span class="math inline">\alpha/\beta^2</span> respectively. The <span class="math inline">\chi^2_k</span> distribution is a special case of the <span class="math inline">\Gamma</span> distribution, with <span class="math inline">\alpha = k/2</span> and <span class="math inline">\beta = 1/2</span>. The Exponential distribution is another special case of the <span class="math inline">\Gamma</span> distribution, with <span class="math inline">\alpha = 1</span>. The sum of <span class="math inline">k</span> independent Exponential random variables with rate <span class="math inline">\beta</span> has a <span class="math inline">\Gamma(k, \beta)</span> distribution.</p>
+<p>Three <span class="math inline">\Gamma</span> distributions are shown in <a href="#fig-gamma" class="quarto-xref">Figure&nbsp;<span>2.5</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_gamma</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-gamma" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gamma-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-gamma-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gamma-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.5: Probability density functions for three <span class="math inline">\Gamma</span> distributions. As <span class="math inline">\alpha</span> increases, the distribution to a <span class="math inline">N(\alpha/\beta, \alpha/\beta^2)</span> distribution.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="mixture-distributions" class="level3">
+<h3 class="anchored" data-anchor-id="mixture-distributions">Mixture distributions</h3>
+<p>A <strong>mixture distribution</strong> is a distribution that is formed by mixing together other distributions. That is, a sample value is drawn from a mixture distribution by first randomly selecting one of the component distributions with some specified probability, and then sampling from the selected component distribution.</p>
+<p>The pdf of a mixture distribution is given by the weighted sum of the pdfs of the component distributions, where the weights correspond to the probability of sampling from each component. For example, suppose <span class="math inline">Y</span> is a mixture of two Normal distributions, with parameters <span class="math inline">(\mu_1,\sigma_1^2)</span> and <span class="math inline">(\mu_2,\sigma_2^2</span>), where the first distribution has weight <span class="math inline">p</span> and the second has weight <span class="math inline">1-p</span>. Then the resulting pdf of the mixture distribution is given by <span class="math display">
+  f(y) = pf(y;\mu_1,\sigma_1^2) + (1-p)f(y;\mu_2,\sigma_2^2).
+</span> The mean and variance of the mixture distribution are given by <span class="math display">
+  \text{E}(Y) = p\mu_1 + (1-p)\mu_2,
+</span> and <span class="math display">
+\text{Var}(Y) = p\sigma_1^2 + (1-p)\sigma_2^2 + p(1-p)(\mu_1 - \mu_2)^2,
+</span> respectively.</p>
+<p>An example is shown in <a href="#fig-mixture" class="quarto-xref">Figure&nbsp;<span>2.6</span></a>, where <span class="math inline">\mu_1 = -2</span>, <span class="math inline">\mu_2 = 2</span>, <span class="math inline">\sigma_1^2 = \sigma_2^2 = 1</span>, and <span class="math inline">p=1/3</span>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_mixture</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dist_normal</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">1</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dist_normal</span>(<span class="dv">2</span>, <span class="dv">1</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">weights =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density_layer</span>(<span class="fu">dist_normal</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">1</span>), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">scale =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density_layer</span>(<span class="fu">dist_normal</span>(<span class="dv">2</span>,<span class="dv">1</span>), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">scale =</span> <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-mixture" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mixture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-mixture-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mixture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.6: Probability density function for a mixture of two Normal distributions. The dashed lines show the (scaled) component densities, and the solid line shows the mixture density, equal to the sum of the dashed lines.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This is an example of a multimodal density function, with modes at <span class="math inline">-2</span> and <span class="math inline">2</span>. The mixture distribution is not Normal, even though both component distributions are Normal. The mixture distribution is also not symmetric, even though both component distributions are symmetric.</p>
+</section>
+<section id="further-reading" class="level3">
+<h3 class="anchored" data-anchor-id="further-reading">Further reading</h3>
+<p>A good introduction to other probability distributions on real sample spaces is provided by <span class="citation" data-cites="Forbes2011">Forbes et al. (<a href="references.html#ref-Forbes2011" role="doc-biblioref">2011</a>)</span>, with more advanced treatments in <span class="citation" data-cites="JKunicontinuous1">Johnson, Kotz, and Balakrishnan (<a href="references.html#ref-JKunicontinuous1" role="doc-biblioref">1994</a>)</span> and <span class="citation" data-cites="JKunicontinuous2">Johnson, Kotz, and Balakrishnan (<a href="references.html#ref-JKunicontinuous2" role="doc-biblioref">1995</a>)</span>.</p>
+</section>
+</section>
+<section id="sec-clt" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="sec-clt"><span class="header-section-number">2.2</span> Central limit theorem</h2>
+<p>The central limit theorem (CLT) is one of the most important results in statistics. There are several variations of the theorem; the simplest version states that the sum of a large number of iid random variables, with finite mean and variance, is approximately Normally distributed.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Central Limit Theorem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">Y_1,\dots,Y_n</span> are iid random variables with mean <span class="math inline">\mu</span> and variance <span class="math inline">\sigma^2 &lt; \infty</span>, then <span class="math display">
+  \frac{\sum_{i=1}^n Y_i - n\mu}{\sigma\sqrt{n}} \longrightarrow \text{N}(0,1).
+</span></p>
+</div>
+</div>
+<p>This is a remarkable result as it does not require any assumptions about the underlying distribution of the random variables <span class="math inline">Y_1,\dots,Y_n</span>, other than that they have finite mean and variance. It is also a useful result, as it allows us to use the Normal distribution to approximate the distribution of many statistics.</p>
+<p>For example, the sample mean (or average), is simply the sum of the observations divided by the sample size. So by the CLT, for a large sample size, the sample mean will have a Normal distribution. That is, if the observations come from a distribution with mean <span class="math inline">\mu</span> and variance <span class="math inline">\sigma^2</span>, then the sample mean will have distribution <span class="math inline">\text{N}(\mu, \sigma^2/n)</span> when <span class="math inline">n</span> is large, regardless of the underlying distribution of the observations.</p>
+<p>Variations on the theorem allow the variables <span class="math inline">Y_1,\dots,Y_n</span> to be independent but not necessarily identically distributed, or to be weakly dependent.</p>
+<p>It is because of the CLT that a <span class="math inline">\chi^2_k</span> distribution is approximately Normal for large <span class="math inline">k</span>. (Recall that the sum of <span class="math inline">k</span> independent N(0,1) random variables has a <span class="math inline">\chi^2_k</span> distribution.)</p>
+<p>Similarly, a <span class="math inline">\Gamma(\alpha,\beta)</span> distribution is approximately Normal for large <span class="math inline">\alpha</span>. (Recall that the sum of <span class="math inline">\alpha</span> independent <span class="math inline">\Gamma(1,\beta)</span>, or Exponential, random variables has a <span class="math inline">\Gamma(\alpha,\beta)</span> distribution.)</p>
+<p><span class="citation" data-cites="Wasserman2004">Wasserman (<a href="references.html#ref-Wasserman2004" role="doc-biblioref">2004</a>)</span> provides some further details and examples of the CLT.</p>
+</section>
+<section id="sec-quantiles" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="sec-quantiles"><span class="header-section-number">2.3</span> Quantiles</h2>
+<p>A quantile of a continuous univariate distribution is a point that divides the sample space into two regions, based on the probability of observations falling below or above the quantile value. If <span class="math inline">Q(p)</span> denotes the quantile corresponding to probability <span class="math inline">p</span>, then <span class="math inline">P(Y \le Q(p)) = p</span> and <span class="math inline">P(Y &gt; Q(p)) = 1-p</span>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">dist_chisq</span>(<span class="dv">5</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>q80 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(dist, <span class="at">p =</span> <span class="fl">0.8</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>x5 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">19</span>, <span class="at">l =</span> <span class="dv">501</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> <span class="fu">unlist</span>(<span class="fu">density</span>(dist, <span class="at">at =</span> x))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>x5 <span class="sc">|&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_area</span>(<span class="at">data =</span> x5 <span class="sc">|&gt;</span> <span class="fu">filter</span>(x <span class="sc">&lt;</span> q80), <span class="at">fill =</span> <span class="st">"#0072B2"</span>) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_area</span>(<span class="at">data =</span> x5 <span class="sc">|&gt;</span> <span class="fu">filter</span>(x <span class="sc">&gt;=</span> q80), <span class="at">fill =</span> <span class="st">"#D55E00"</span>) <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>) <span class="sc">+</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">20</span>, <span class="at">by =</span> <span class="dv">5</span>), q80),</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">20</span>, <span class="at">by =</span> <span class="dv">5</span>), <span class="fu">paste0</span>(<span class="fu">round</span>(q80, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">Q(0.8)"</span>)),</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">minor_breaks =</span> <span class="cn">NULL</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_label</span>(</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">10</span>), <span class="at">y =</span> <span class="fl">0.01</span>),</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">label =</span> <span class="fu">paste</span>(<span class="st">"Prob ="</span>, <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="fl">0.2</span>)))</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-quantile" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-quantile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-quantile-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-quantile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.7: The 0.8 quantile of a <span class="math inline">\chi^2_5</span> distribution is the value <span class="math inline">Q(0.8) = 7.29</span> such that <span class="math inline">P(Y \le 7.29) = 0.8</span>. The shaded area is 0.8, and the probability of observing a value greater than 7.29 is 0.2.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The quantiles of a continuous distribution are given by the inverse of the cumulative distribution function, <span class="math inline">Q(p) = F^{-1}(p)</span>.</p>
+<p>Some quantiles are given special names. The <span class="math inline">p=0.5</span> quantile is called the <strong>median</strong>. The <span class="math inline">p=0.25</span> and <span class="math inline">p=0.75</span> quantiles are called the <strong>lower</strong> and <strong>upper quartiles</strong> respectively. The <strong>deciles</strong> are defined when <span class="math inline">p=0.1,0.2,\dots,0.9</span>, while the <strong>percentiles</strong> are defined with <span class="math inline">p=0.01,0.02,\dots,0.99</span>.</p>
+<p>The “interquartile range” (IQR) is the difference between the upper and lower quartiles. It is a measure of the spread of the distribution, and is often used as a robust alternative to the standard deviation. For a Normal distribution, the standard deviation is equal to 1.349 times the IQR.</p>
+<p>The quantile functions for a standard Normal distribution, a <span class="math inline">\text{t}_5</span> distribution, and a <span class="math inline">\chi^2_5</span> distribution are shown in <a href="#fig-quantile2" class="quarto-xref">Figure&nbsp;<span>2.8</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">l =</span> <span class="dv">501</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="fu">dist_normal</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="fu">dist_student_t</span>(<span class="dv">5</span>), <span class="fu">dist_chisq</span>(<span class="dv">5</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quantile</span>(<span class="at">p =</span> p) <span class="sc">|&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>(<span class="at">.name_repair =</span> <span class="st">"unique"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">p =</span> p) <span class="sc">|&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="sc">-</span>p, <span class="at">names_to =</span> <span class="st">"Distribution"</span>, <span class="at">values_to =</span> <span class="st">"Q"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> p, <span class="at">y =</span> Q, <span class="at">col =</span> Distribution)) <span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"p"</span>, <span class="at">y =</span> <span class="st">"Quantile function: Q(p)"</span>) <span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_discrete</span>(<span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"N(0,1)"</span>),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$t_{~5}$"</span>),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">"$</span><span class="sc">\\</span><span class="st">chi^{~2}_{~~5}$"</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-quantile2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-quantile2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-quantile2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-quantile2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.8: Quantile function for a standard Normal distribution, a <span class="math inline">\text{t}_5</span> distribution, and a <span class="math inline">\chi^2_5</span> distribution.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-sample-quantiles" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="sec-sample-quantiles"><span class="header-section-number">2.4</span> Sample quantiles</h2>
+<p>The <strong>sample quantiles</strong> of a data set are estimates of the quantiles of the underlying distribution. Suppose we have data on a single variable, <span class="math inline">\{y_1,\dots,y_n\}</span>, and we want to estimate a quantile <span class="math inline">Q(p)</span>. There are a surprising number of ways this can be done, and there is no accepted standard approach.</p>
+<section id="the-quantile-function" class="level3">
+<h3 class="anchored" data-anchor-id="the-quantile-function">The <code>quantile()</code> function</h3>
+<p>The R function <code>quantile()</code> includes nine variations, based on <span class="citation" data-cites="HF96">Hyndman and Fan (<a href="references.html#ref-HF96" role="doc-biblioref">1996</a>)</span>. Which variation you use makes little difference except for tiny data sets where <span class="math inline">n</span> is small, or when you are interested in the tails when <span class="math inline">p</span> is close to 0 or 1. However, for anomaly detection, we are usually interested in the tails, so we will need to use a method that works well for extreme values of <span class="math inline">p</span>.</p>
+<p>Let’s compare two of the possible variations available in <code>quantile()</code>: <code>type = 7</code> which is the default method, and <code>type = 8</code> which was the recommendation of <span class="citation" data-cites="HF96">Hyndman and Fan (<a href="references.html#ref-HF96" role="doc-biblioref">1996</a>)</span> due to it having smaller bias.</p>
+<p>Let <span class="math inline">y_{(k)}</span> denote the <span class="math inline">k</span>th largest observation, <span class="math inline">k=1,\dots,n</span>. These ordered values are known as “<strong>order statistics</strong>”. Then the sample quantile <span class="math inline">\hat{Q}(p)</span> is given by linear interpolation between consecutive order statistics. That is, if <span class="math inline">k^+= p(n+1-2a) +a</span> for some constant <span class="math inline">a</span>, then <span class="math display">
+  \hat{Q}(p) = (1-\gamma) y_{(k)} + \gamma y_{(k+1)},
+</span> where <span class="math inline">k = \lfloor k^+ \rfloor</span> is the integer part of <span class="math inline">k^+</span> and <span class="math inline">\gamma = k^+ - k</span> is the remainder. Most of the different methods for estimating quantiles differ only in the value of <span class="math inline">a</span>.</p>
+<ul>
+<li>When the default <code>type = 7</code> is used, <span class="math inline">a = 1</span>, so <span class="math inline">k^+ = p(n-1) + 1</span>.</li>
+<li>When <code>type = 8</code> is used, <span class="math inline">a= 1/3</span>, so <span class="math inline">k^+ = p(n+1/3) + 1/3</span>.</li>
+</ul>
+<p>For any value of <span class="math inline">a</span>, if <span class="math inline">p=0.5</span> then <span class="math inline">k^+ = (n+1)/2</span>, and we obtain the sample median:</p>
+<ul>
+<li>When <span class="math inline">n</span> is even, then <span class="math inline">k=n/2</span> and <span class="math inline">\gamma = 1/2</span>, so <span class="math inline">\hat{Q}(0.5)</span> is the average of the middle two observations.</li>
+<li>When <span class="math inline">n</span> is odd, then <span class="math inline">k=(n+1)/2</span> and <span class="math inline">\gamma = 0</span>, so <span class="math inline">\hat{Q}(0.5)</span> is the middle observation.</li>
+</ul>
+<p>For large <span class="math inline">n</span>, the sample quantile should provide a good estimate of the true quantile, so that <span class="math inline">\hat{Q}(p) \approx Q(p)</span>. We can study the bias of the estimator by simulating from a known distribution, and comparing the sample quantiles to the true quantiles. In <a href="#fig-quantile-bias" class="quarto-xref">Figure&nbsp;<span>2.9</span></a>, we do this for samples drawn from a N(0,1) distribution. The estimated bias is based on repeating the exercise 10,000 times and averaging the results.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>avequantile <span class="ot">&lt;-</span> <span class="cf">function</span>(n, p, m) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  Q7 <span class="ot">&lt;-</span> Q8 <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(p))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq</span>(m)) {</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    random_sample <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    Q7 <span class="ot">&lt;-</span> Q7 <span class="sc">+</span> <span class="fu">quantile</span>(random_sample, <span class="at">prob =</span> p, <span class="at">type =</span> <span class="dv">7</span>) <span class="sc">/</span> m</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    Q8 <span class="ot">&lt;-</span> Q8 <span class="sc">+</span> <span class="fu">quantile</span>(random_sample, <span class="at">prob =</span> p, <span class="at">type =</span> <span class="dv">8</span>) <span class="sc">/</span> m</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">n =</span> n, <span class="at">p =</span> p, <span class="at">Q7 =</span> Q7, <span class="at">Q8 =</span> Q8)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>qbias <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">n =</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">1000</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">pmap_dfr</span>(<span class="sc">~</span> <span class="fu">avequantile</span>(</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> .x,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> <span class="fu">seq</span>(<span class="fl">0.002</span>, <span class="fl">0.998</span>, <span class="at">by =</span> <span class="fl">0.001</span>), <span class="at">m =</span> <span class="dv">10000</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">|&gt;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(Q7<span class="sc">:</span>Q8, <span class="at">names_to =</span> <span class="st">"type"</span>, <span class="at">values_to =</span> <span class="st">"Q"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="fu">paste</span>(<span class="st">"type = "</span>, readr<span class="sc">::</span><span class="fu">parse_number</span>(type)),</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">Qtrue =</span> <span class="fu">qnorm</span>(p),</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">bias =</span> Q <span class="sc">-</span> <span class="fu">qnorm</span>(p)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>qbias <span class="sc">|&gt;</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> p, <span class="at">group =</span> type)) <span class="sc">+</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> bias, <span class="at">col =</span> type, <span class="at">linetype =</span> <span class="st">"n = 100"</span>),</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> qbias <span class="sc">|&gt;</span> <span class="fu">filter</span>(n <span class="sc">==</span> <span class="dv">100</span>)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> bias, <span class="at">col =</span> type, <span class="at">linetype =</span> <span class="st">"n = 1000"</span>),</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> qbias <span class="sc">|&gt;</span> <span class="fu">filter</span>(n <span class="sc">==</span> <span class="dv">1000</span>)</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Probability p"</span>,</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Bias of sample quantile"</span>,</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">"Sample size"</span>),</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="fu">guide_legend</span>(<span class="at">title =</span> <span class="st">"Quantile method"</span>)</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-quantile-bias" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-quantile-bias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-quantile-bias-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-quantile-bias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.9: Bias of the sample quantile for a N(0,1) distribution. The orange line shows the bias of the default <code>type = 7</code> quantile method, while the blue line shows the bias of the preferred <code>type = 8</code> quantile method.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Clearly, the <code>type = 8</code> sample quantile gives much better results than the default <code>type = 7</code> method, especially when <span class="math inline">p</span> is close to 0 or 1. Consequently, we will always use <code>type = 8</code> when computing sample quantiles in the remainder of this book.</p>
+</section>
+<section id="example-test-cricket-batting-averages" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="example-test-cricket-batting-averages">Example: Test cricket batting averages</h3>
+<p>We can calculate some of the sample quantiles for Test cricket batting averages, considering only those batters who have played at least 20 innings. These values are easily computed using the <code>quantile()</code> function with argument <code>type = 8</code>.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Average) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">quantile</span>(<span class="at">prob =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.25</span>, <span class="fl">0.50</span>, <span class="fl">0.75</span>, <span class="fl">0.99</span>, <span class="dv">1</span>), <span class="at">type =</span> <span class="dv">8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;    0%   25%   50%   75%   99%  100% 
+#&gt;  2.00 16.59 26.63 36.72 58.50 99.94</code></pre>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>batave <span class="ot">&lt;-</span> cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.99</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>Qs <span class="ot">&lt;-</span> <span class="fu">quantile</span>(batave<span class="sc">$</span>Average, <span class="at">prob =</span> p, <span class="at">type =</span> <span class="dv">8</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>batave <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Average, <span class="at">y =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> Qs, <span class="at">col =</span> <span class="st">"#D55E00"</span>) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>() <span class="sc">+</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">0</span>, Qs, <span class="dv">100</span>),</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"0"</span>, <span class="fu">sprintf</span>(<span class="st">"%2.2f"</span>, Qs), <span class="st">"100"</span>),</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">0</span>, Qs, <span class="dv">100</span>),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"0"</span>, <span class="fu">sprintf</span>(<span class="st">"%2.2f"</span>, Qs), <span class="st">"100"</span>),</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">sec.axis =</span> <span class="fu">dup_axis</span>(</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">name =</span> <span class="st">""</span>,</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">breaks =</span> Qs,</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">hat{Q}(%2.2f)"</span>, p))</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>, <span class="at">x =</span> <span class="st">"Career batting average"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-cricket-quantiles" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cricket-quantiles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-cricket-quantiles-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cricket-quantiles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.10: Some sample quantiles of career batting averages for all men and women to have played test cricket and batted more than 20 times.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Half of all batters average above 26.63, while only 1 in 100 batters have an average above 58.50.</p>
+</section>
+<section id="sample-quantile-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="sample-quantile-distribution">Sample quantile distribution</h3>
+<p>With a large sample size <span class="math inline">n</span>, the sample quantile <span class="math inline">\hat{Q}(p)</span> has an approximate Normal distribution, <span id="eq-sample-quantile-distribution"><span class="math display">
+\hat{Q}(p) \approx \text{N}\left(Q(p), \frac{p(1-p)}{n f^2(Q(p))}\right)
+\tag{2.2}</span></span> where <span class="math inline">f(y)</span> is the density of the underlying distribution <span class="citation" data-cites="van2000asymptotic">(<a href="references.html#ref-van2000asymptotic" role="doc-biblioref">Van der Vaart 2000, p308</a>)</span>. This is an asymptotic result, that assumes <span class="math inline">np</span> is large, and holds for all types of sample quantiles.</p>
+</section>
+</section>
+<section id="sec-hdr" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="sec-hdr"><span class="header-section-number">2.5</span> Highest density regions</h2>
+<p>A <strong>highest density region</strong> is defined as the region of the sample space where the density is higher than a given threshold <span class="citation" data-cites="HDR96">(<a href="references.html#ref-HDR96" role="doc-biblioref">Hyndman 1996</a>)</span>. It is commonly specified using the probability mass that the HDR contains. For example, a 95% HDR is the region of the sample space that contains 95% of the probability mass, and where every point inside the region has higher density than any point outside the region.</p>
+<p>For the univariate random variable <span class="math inline">Y</span>, with a smooth, continuous density function <span class="math inline">f</span>, the <span class="math inline">100(1-\alpha)</span>% HDR is the set <span id="eq-hdr"><span class="math display">
+  R_\alpha = \{y: f(y) \ge f_\alpha\}
+\tag{2.3}</span></span> where <span class="math inline">P(Y \in R_\alpha) = 1-\alpha</span>.</p>
+<p>A useful property of the HDR is that it is the smallest region containing <span class="math inline">1-\alpha</span> of the probability mass.</p>
+<p>For a symmetric unimodal distribution such as the Normal or t distributions, the HDR is an interval centred on the mean (which is equal to the median), with the ends given by the <span class="math inline">\alpha/2</span> and <span class="math inline">1-\alpha/2</span> quantiles. For a skewed unimodal distribution such as the <span class="math inline">\chi^2</span> or Gamma distributions, the HDR is also an interval, but it is not centred on the mean (or median), and the ends are not given by symmetric quantiles. For example, <a href="#fig-hdr" class="quarto-xref">Figure&nbsp;<span>2.11</span></a> shows two 90% regions for a <span class="math inline">\chi^2_5</span> distribution. The one shown in blue is based on the 0.05 and 0.95 quantiles, while the orange region is the 90% HDR. Notice that both are intervals, and that the orange interval is smaller than the blue interval. The value of the density at the ends of the HDR is the same, and is given by <span class="math inline">f_\alpha</span>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">dist_chisq</span>(<span class="dv">5</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>interval1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(dist, <span class="at">p =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>)) <span class="sc">|&gt;</span> <span class="fu">unlist</span>()</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>interval2 <span class="ot">&lt;-</span> <span class="fu">hdr</span>(dist, <span class="at">size =</span> <span class="dv">90</span>) <span class="sc">|&gt;</span> <span class="fu">unlist</span>()</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>falpha <span class="ot">&lt;-</span> <span class="fu">density</span>(dist, <span class="at">at =</span> interval2[<span class="dv">1</span>])</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">gg_density</span>(dist) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>) <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> interval1), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> <span class="sc">-</span><span class="fl">0.002</span>),</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"#0072B2"</span>, <span class="at">linewidth =</span> <span class="dv">2</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> interval2[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> <span class="fl">0.001</span>),</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linewidth =</span> <span class="dv">2</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rep</span>(interval2[<span class="dv">1</span>], <span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, falpha)),</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y), <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rep</span>(interval2[<span class="dv">2</span>], <span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, falpha)),</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y), <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> falpha), <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.15</span>, <span class="at">by =</span> <span class="fl">0.05</span>), falpha),</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">minor_breaks =</span> <span class="cn">NULL</span>,</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="fu">c</span>(<span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.15</span>, <span class="at">by =</span> <span class="fl">0.05</span>), <span class="st">"$f_</span><span class="sc">\\</span><span class="st">alpha$"</span>)),</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-hdr" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hdr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-hdr-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hdr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.11: Highest density region for a <span class="math inline">\chi^2_5</span> distribution. The blue bar shows the 90% interval based on the 0.05 and 0.95 quantiles. The orange bar shows the 90% HDR, which is the smallest region containing 90% of the probability mass.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>For a multimodal distribution, the HDR may be a union of intervals. For example, the HDR for the mixture shown in <a href="#fig-mixture" class="quarto-xref">Figure&nbsp;<span>2.6</span></a> is displayed in <a href="#fig-hdr-mixture" class="quarto-xref">Figure&nbsp;<span>2.12</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">dist_mixture</span>(<span class="fu">dist_normal</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">1</span>), <span class="fu">dist_normal</span>(<span class="dv">2</span>, <span class="dv">1</span>), <span class="at">weights =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>interval1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(dist, <span class="at">p =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>)) <span class="sc">|&gt;</span> <span class="fu">unlist</span>()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>interval2 <span class="ot">&lt;-</span> <span class="fu">hdr</span>(dist, <span class="at">size =</span> <span class="dv">90</span>) <span class="sc">|&gt;</span> <span class="fu">unlist</span>()</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>hdrinterval1 <span class="ot">&lt;-</span> interval2[<span class="fu">c</span>(<span class="st">"lower1"</span>, <span class="st">"upper1"</span>)]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>hdrinterval2 <span class="ot">&lt;-</span> interval2[<span class="fu">c</span>(<span class="st">"lower2"</span>, <span class="st">"upper2"</span>)]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>falpha <span class="ot">&lt;-</span> <span class="fu">density</span>(dist, <span class="at">at =</span> hdrinterval2[<span class="dv">1</span>])</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">gg_density</span>(dist) <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"Probability Density Function: f(y)"</span>) <span class="sc">+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> interval1), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> <span class="sc">-</span><span class="fl">0.0028</span>),</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"#0072B2"</span>, <span class="at">linewidth =</span> <span class="dv">2</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> hdrinterval1), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> <span class="fl">0.0018</span>),</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linewidth =</span> <span class="dv">2</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> hdrinterval2), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> <span class="fl">0.0018</span>),</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linewidth =</span> <span class="dv">2</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (edge <span class="cf">in</span> interval2[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]) {</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">geom_line</span>(</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rep</span>(edge, <span class="dv">2</span>), <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">0</span>, falpha)),</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y), <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>p <span class="sc">+</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> falpha), <span class="at">col =</span> <span class="st">"#D55E00"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.2</span>, <span class="at">by =</span> <span class="fl">0.1</span>), falpha),</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">minor_breaks =</span> <span class="cn">NULL</span>,</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="fu">c</span>(</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>      <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.2</span>, <span class="at">by =</span> <span class="fl">0.1</span>),</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>      <span class="st">"$f_</span><span class="sc">\\</span><span class="st">alpha$"</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-hdr-mixture" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hdr-mixture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-hdr-mixture-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hdr-mixture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.12: Highest density region for the mixture distribution shown in <a href="#fig-mixture" class="quarto-xref">Figure&nbsp;<span>2.6</span></a>. The blue bar shows the 90% interval based on the 0.05 and 0.95 quantiles. The orange bar shows the 90% HDR, which is the smallest region containing 90% of the probability mass.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-robust-univariate" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="sec-robust-univariate"><span class="header-section-number">2.6</span> Robust estimation</h2>
+<p>Many anomaly detection methods will need an estimate of the centre and the spread of the distribution of data. The usual estimators are the sample mean and sample standard deviation, but these are sensitive to outliers, so we will need to use alternatives.</p>
+<p>For univariate data, the sample median provides a convenient robust estimator of the centre of the distribution. A simple robust estimator of the spread is the IQR, defined as <span id="eq-iqr"><span class="math display">
+  \text{IQR} = \hat{Q}(0.75) - \hat{Q}(0.25).
+\tag{2.4}</span></span> Another commonly used robust estimator of spread is the median absolute deviation (MAD), given by <span id="eq-mad"><span class="math display">
+  \text{MAD} = \text{median}(|y_i - \text{median}(y)|).
+\tag{2.5}</span></span> If our data come from a Normal distribution, then the standard deviation is given by <span class="math inline">s = 0.7413\times\text{IQR} = 1.4826\times\text{MAD}</span>.</p>
+<p>A third robust estimator of the spread is the <span class="math inline">Q_n</span> estimator <span class="citation" data-cites="Rousseeuw1993-tq">(<a href="references.html#ref-Rousseeuw1993-tq" role="doc-biblioref">Rousseeuw and Croux 1993</a>)</span>, based on pairwise differences between observations. Let <span class="math inline">\Delta_{ij} = |y_i-y_j|</span> denote the absolute difference between the <span class="math inline">i</span>th and <span class="math inline">j</span>th observations, for <span class="math inline">1 \le i &lt; j \le n</span>. There are <span class="math inline">n(n-1)/2</span> such differences. Let <span class="math inline">\Delta_{(k)}</span> be the <span class="math inline">k</span>th largest of these differences, where <span class="math inline">k = {\lfloor n/2\rfloor + 1 \choose 2}</span> and <span class="math inline">\lfloor n/2\rfloor</span> is the integer part of <span class="math inline">n/2</span>. Thus, <span class="math inline">\Delta_{(k)}</span> is approximately equal to the first quartile of the absolute pairwise differences. Then <span class="math display">Q_n = d_n\Delta_{(k)},</span> where <span class="math inline">d_n</span> is a constant that depends on <span class="math inline">n</span> and is designed to scale <span class="math inline">Q_n</span> so that it provides an estimate of the standard deviation for a Normal distribution. For large <span class="math inline">n</span>, <span class="math inline">d_n = 2.219</span>. While the IQR and MAD estimators are somewhat simpler and easier to understand, the <span class="math inline">Q_n</span> estimator has some useful properties <span class="citation" data-cites="Rousseeuw1993-tq">(as discussed in <a href="references.html#ref-Rousseeuw1993-tq" role="doc-biblioref">Rousseeuw and Croux 1993</a>)</span>.</p>
+<p>All three of these robust estimators of the standard deviation can be computed using the <code>robustbase</code> package, with the functions <code>s_IQR()</code>, <code>s_mad()</code>, and <code>s_Qn()</code> respectively.</p>
+</section>
+<section id="sec-kde" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="sec-kde"><span class="header-section-number">2.7</span> Univariate kernel density estimation</h2>
+<p>Unlike the examples discussed in <a href="#sec-common" class="quarto-xref"><span>Section 2.1</span></a>, we will not normally know what distribution our data come from, and they will almost never be from a standard parametric distribution such as a Normal, t, <span class="math inline">\chi^2</span> or Gamma distribution. Instead, we will need to estimate the probability density function from the data. Kernel density estimation is the most popular method for nonparametric estimation of a probability density function.</p>
+<section id="kernel-density-estimates" class="level3">
+<h3 class="anchored" data-anchor-id="kernel-density-estimates">Kernel density estimates</h3>
+<p>Suppose we have <span class="math inline">n</span> univariate observations, <span class="math inline">\{y_1,\dots,y_n\}</span>, which are independent draws from a probability distribution, and we want to estimate the underlying probability density function. The kernel density estimate <span class="citation" data-cites="WJ1995">(see <a href="references.html#ref-WJ1995" role="doc-biblioref">Wand and Jones 1995</a>)</span> is given by <span id="eq-kde"><span class="math display">
+  \hat{f}(y) = \frac{1}{n} \sum_{i=1}^n K_h(y-y_i),
+\tag{2.6}</span></span> where <span class="math inline">K_h</span> is a “kernel” function and <span class="math inline">h</span> is a bandwidth to be determined. We will use kernel functions that are themselves probability density functions with mean 0 and standard deviation <span class="math inline">h</span>. Thus, a kernel density estimate is a mixture distribution with <span class="math inline">n</span> components, each of which is a kernel function centred at one of the observations. For example, the “Gaussian” kernel is <span class="math inline">K_h(u) = \exp(-u^2/h^2)/(h\sqrt{2\pi})</span>, equal to the Normal density function with mean zero and standard deviation <span class="math inline">h</span>. Another popular kernel is the quadratic Epanechnikov kernel given by <span class="math inline">K_h(u) = [1-u^2/(5h^2)]_+ / (h4\sqrt{5}/3)</span>, where <span class="math inline">x_+ = \max(x,0)</span>. In our examples, we will use the Gaussian kernel.</p>
+<p>Now we will apply <a href="#eq-kde" class="quarto-xref">Equation&nbsp;<span>2.6</span></a> to the first ten Old Faithful eruption durations from 2021 that are in the <code>oldfaithful</code> data set. The kernel density estimate can be visualized as a sum of kernel functions centred over each observation with width determined by <span class="math inline">h</span>, and height given by <span class="math inline">K_h(0)/n</span>.</p>
+<p>Let’s suppose <span class="math inline">K_h</span> is a Gaussian kernel and let <span class="math inline">h = 16</span> (I will explain this choice below). Then we get the following set of kernel functions.</p>
+<div class="cell" data-layout-align="center" data-depends="of2021">
+<div class="cell-output-display">
+<div id="fig-kde1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kde1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-kde1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kde1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.13: Kernel functions centred over the observations.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The vertical ticks show the location of the ten observations, while the grey lines show <span class="math inline">\frac{1}{n}K_h(y - y_i)</span> for <span class="math inline">i=1,\dots,n</span>.</p>
+<p>These functions are then added together, as in <a href="#eq-kde" class="quarto-xref">Equation&nbsp;<span>2.6</span></a>, to give the density estimate.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-kde2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kde2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-kde2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kde2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.14: Density estimate formed by summing the kernel functions centred on the observations.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>We made two choices when producing this estimate: the value of <span class="math inline">h</span> and the type of kernel <span class="math inline">K_h</span>. If either was replaced with a different choice, the estimate would be different. For large data sets, it does not make much difference which kernel function is used.</p>
+<p>The choice of <span class="math inline">h</span> is more difficult and will change the shape of the density estimate substantially. Here are three versions of the density estimate with bandwidths given by <span class="math inline">h=5</span>, <span class="math inline">h=15</span> and <span class="math inline">h=40</span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-kde3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kde3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-kde3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kde3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.15: Kernel density estimates based on different bandwidth values <span class="math inline">h</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>When <span class="math inline">h</span> is too small, the density estimate is too rough, with many peaks and troughs. When <span class="math inline">h</span> is too large, the density estimate is too smooth and we fail to see any features in the data. A popular choice for <span class="math inline">h</span> is the “normal reference rule” <span class="citation" data-cites="Silverman1986">(<a href="references.html#ref-Silverman1986" role="doc-biblioref">Silverman 1986, p45</a>)</span> given by <span id="eq-nrr"><span class="math display">
+  h = 1.059 s n^{-1/5}
+\tag{2.7}</span></span> but because we want our results to be robust to outliers, we will replace <span class="math inline">s</span> by the robust <span class="math inline">Q_n</span> estimate, resulting in <span id="eq-rnrr"><span class="math display">
+  h = 1.059 Q_n n^{-1/5}.
+\tag{2.8}</span></span> We will call this the “robust normal reference rule”; it is implemented in the function <code>kde_bandwidth()</code>. For the 10 observations in the example above, it gives <span class="math inline">h = 16</span>, which is the value we used.</p>
+<p>This example using only 10 observations was purely to illustrate the method. Let’s now estimate a kernel density estimate for the full data set (other than that one pesky duration of 2 hours).</p>
+<p>We will use the <code>dist_kde()</code> function, which uses the Gaussian kernel, and by default sets the bandwidth using the robust normal reference rule (<a href="#eq-rnrr" class="quarto-xref">Equation&nbsp;<span>2.8</span></a>) via the <code>kde_bandwidth()</code> function.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>of <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>of_density <span class="ot">&lt;-</span> <span class="fu">dist_kde</span>(of<span class="sc">$</span>duration)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>of_density <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rug</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration), of) <span class="sc">+</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-oldfaithful4" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithful4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-oldfaithful4-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithful4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.16: Kernel density estimate of Old Faithful eruption durations since 2015, omitting the one eruption that lasted nearly two hours.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>As this is a much bigger data set (with 2260 observations), the selected bandwidth is smaller and is now <span class="math inline">h = 5.01</span>. Here the estimate has clearly identified the two groups of eruptions, one much larger than the other. The extreme observation of 1 second, and the unusual observations between 140 and 180 seconds are in the areas of low density. Later we will use density estimates at each observation to identify anomalous points.</p>
+</section>
+<section id="statistical-properties" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="statistical-properties">Statistical properties</h3>
+<p>The statistical properties of the kernel density estimator (<a href="#eq-kde" class="quarto-xref">Equation&nbsp;<span>2.6</span></a>) have been extensively studied, and are described in several books including <span class="citation" data-cites="WJ1995">Wand and Jones (<a href="references.html#ref-WJ1995" role="doc-biblioref">1995</a>)</span> and <span class="citation" data-cites="Scott2015">Scott (<a href="references.html#ref-Scott2015" role="doc-biblioref">2015</a>)</span>.</p>
+<p>An important asymptotic result is that the mean square error (MSE) of <span class="math inline">\hat{f}(y)</span> is <span id="eq-mse"><span class="math display">
+  \text{E}\left[(\hat{f}(y) - f(y))^2\right] \approx
+  \frac{1}{4}h^4[f''(y)]^2 + \frac{f(y)R(K)}{nh} ,
+\tag{2.9}</span></span> where <span class="math inline">R(K) = \int K^2(u)du</span> is the “roughness” of the kernel function. An estimator is “consistent” if the MSE goes to zero as the sample size <span class="math inline">n</span> goes to infinity. So <a href="#eq-kde" class="quarto-xref">Equation&nbsp;<span>2.6</span></a> gives a consistent estimator of the underlying density <span class="math inline">f</span> when both terms in <a href="#eq-mse" class="quarto-xref">Equation&nbsp;<span>2.9</span></a> go to zero. That is, <span id="eq-asymptotickde"><span class="math display">
+  \lim_{n\rightarrow\infty} h = 0
+  \qquad\text{and}\qquad
+  \lim_{n\rightarrow\infty} nh = \infty,
+\tag{2.10}</span></span> and so <span class="math inline">h</span> should decrease slowly as <span class="math inline">n</span> increases. Note that these conditions hold for <a href="#eq-rnrr" class="quarto-xref">Equation&nbsp;<span>2.8</span></a>.</p>
+<p>If we integrate the MSE given by <a href="#eq-mse" class="quarto-xref">Equation&nbsp;<span>2.9</span></a> over <span class="math inline">y</span> (assuming <span class="math inline">f</span> is sufficiently smooth for the integral to exist), we obtain the mean integrated squared error (MISE) given by <span id="eq-mise"><span class="math display">
+  \text{E}\int \left[(\hat{f}(y) - f(y))^2\right] dy \approx
+  \frac{1}{4}h^4R(f'') + \frac{R(K)}{nh} ,
+\tag{2.11}</span></span> where <span class="math inline">R(f'') = \int [f''(y)]^2 dy</span> is the roughness of the second derivative of the underlying density. This gives us the average squared error over the whole range of <span class="math inline">y</span>.</p>
+</section>
+<section id="bandwidth-selection" class="level3">
+<h3 class="anchored" data-anchor-id="bandwidth-selection">Bandwidth selection</h3>
+<p>The optimal overall bandwidth is obtained by minimizing the MISE. This can be calculated by differentiating <a href="#eq-mise" class="quarto-xref">Equation&nbsp;<span>2.11</span></a> with respect to <span class="math inline">h</span> and setting the derivative to zero, yielding <span id="eq-opth"><span class="math display">
+  h = \left(\frac{R(K)}{R(f'')n}\right)^{1/5}.
+\tag{2.12}</span></span> So the optimal <span class="math inline">h</span> is proportional to <span class="math inline">n^{-1/5}</span>, which clearly satisfies the conditions given by <a href="#eq-asymptotickde" class="quarto-xref">Equation&nbsp;<span>2.10</span></a>.</p>
+<p>However, this value of <span class="math inline">h</span> depends on the underlying density <span class="math inline">f</span> which we don’t know. If <span class="math inline">f</span> is a Normal density with variance <span class="math inline">\sigma^2</span>, then <span class="math inline">R(f) = \frac{1}{2\sqrt{\pi}}\sigma^{-1}</span> and <span class="math inline">R(f'') = \frac{3}{8\sqrt{\pi}}\sigma^{-5}</span>. So if we use a Gaussian kernel, and assume the underlying density has the same roughness as a Normal density, we obtain <span id="eq-opth"><span class="math display">
+  h = \sigma \left(\frac{4}{3n}\right)^{1/5}.
+\tag{2.13}</span></span> Replacing <span class="math inline">\sigma</span> by the sample standard deviation gives us the normal reference rule <a href="#eq-nrr" class="quarto-xref">Equation&nbsp;<span>2.7</span></a>; while replacing <span class="math inline">\sigma</span> by the robust estimate <span class="math inline">Q_n</span> gives use the robust normal reference rule <a href="#eq-rnrr" class="quarto-xref">Equation&nbsp;<span>2.8</span></a>.</p>
+<p>Several other related bandwidth selection methods are widely used. For example, instead of using <span class="math inline">Q_n</span> to estimate <span class="math inline">s</span>, we might use the minimum of the sample standard deviation and the robust estimate based on the IQR, giving <span id="eq-nrd"><span class="math display">
+  h = 1.06 \min(s, 0.7413\text{IQR}) n^{-1/5}.
+\tag{2.14}</span></span> This is what is computed by the <code>bw.nrd()</code> function, and is available in <code>geom_density()</code> or <code>density()</code> by setting <code>bw = "nrd"</code>.</p>
+<p>Silverman’s “rule-of-thumb” is similar, but it replaces 1.06 in <a href="#eq-nrd" class="quarto-xref">Equation&nbsp;<span>2.14</span></a> by 0.9, because Silverman argued that most densities are not as smooth as a Normal density, and so a smaller bandwidth is required. This variation is computed using the <code>bw.nrd0()</code> function, and is the default bandwidth used by <code>geom_density()</code> and <code>density()</code>.</p>
+<p>Another popular bandwidth choice is the “plug-in” bandwidth <span class="citation" data-cites="SJ91">(<a href="references.html#ref-SJ91" role="doc-biblioref">Sheather and Jones 1991</a>)</span>, obtained by replacing <span class="math inline">R(f'')</span> in <a href="#eq-opth" class="quarto-xref">Equation&nbsp;<span>2.13</span></a> by an estimate based on the data. This is computed by <code>bw.SJ()</code> and can be used with <code>geom_density()</code> and <code>density()</code> by setting <code>bw = "SJ"</code>. For most data sets, this will give a smaller value than <a href="#eq-nrr" class="quarto-xref">Equation&nbsp;<span>2.7</span></a>.</p>
+<p>Bandwidths obtained in this way are designed to give a good overall estimate of the underlying density, but may not be optimal for any particular point of the density. Our goal is to find anomalies in the data, rather than find a good representation for the rest of the data, and so we are interested in the regions of low density.</p>
+<p>If we optimized MSE (<a href="#eq-mse" class="quarto-xref">Equation&nbsp;<span>2.9</span></a>) rather than MISE (<a href="#eq-mise" class="quarto-xref">Equation&nbsp;<span>2.11</span></a>), we would obtain <span class="math display">
+h = \left(\frac{f(y)R(K)}{n[f''(y)]^2}\right)^{1/5}.
+</span> This shows that larger bandwidths are required when <span class="math inline">f(y)/[f''(y)]^2</span> is relatively large, which often occurs in the extreme tails of a distribution. So bandwidths for anomaly detection tend to be larger than bandwidths for other purposes. For that reason, we will sometimes use twice the value of <span class="math inline">h</span> given by <a href="#eq-rnrr" class="quarto-xref">Equation&nbsp;<span>2.8</span></a>, which is available in the <code>kde_bandwidth()</code> function using <code>multiplier = 2</code>.</p>
+</section>
+<section id="highest-kernel-density-regions" class="level3">
+<h3 class="anchored" data-anchor-id="highest-kernel-density-regions">Highest kernel density regions</h3>
+<p>The kernel density estimate can be used to identify regions of highest density in the data. We can apply the <code>hdr()</code> function to the estimated distribution to find the HDR regions with specified probability coverage. For example, we can compute the 90% HDR for the <code>oldfaithful</code> data set as follows:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>hdr <span class="ot">&lt;-</span> <span class="fu">hdr</span>(of_density, <span class="at">size =</span> <span class="dv">90</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>hdr</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; &lt;hdr[1]&gt;
+#&gt; [1] [105.5, 127.1][202.2, 282.2]90</code></pre>
+</div>
+</div>
+<p>This shows that the 90% HDR comprises two intervals, corresponding to the short and long duration events.</p>
+<p>The resulting estimate is shown in <a href="#fig-of-hdr" class="quarto-xref">Figure&nbsp;<span>2.17</span></a>, along with the 10% of observations that lie outside the 90% HDR.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>of_density <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>(<span class="at">hdr =</span> <span class="st">"fill"</span>, <span class="at">prob =</span> <span class="fl">0.9</span>, <span class="at">show_points =</span> <span class="cn">TRUE</span>, <span class="at">jitter =</span> <span class="cn">TRUE</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-of-hdr" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-of-hdr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-of-hdr-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-of-hdr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.17: 90% highest density region for the <code>oldfaithful</code> data set.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-evt" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="sec-evt"><span class="header-section-number">2.8</span> Extreme value theory</h2>
+<p>Extreme Value Theory is used to model rare, extreme events and is useful in anomaly detection. Suppose we have <span class="math inline">n</span> independent and identically distributed random variables <span class="math inline">Y_1, \dots, Y_n</span> with a cdf <span class="math inline">F(y) = P\{Y \leq y\}</span>. Then the maximum of these <span class="math inline">n</span> random variables is <span class="math inline">M_n = \max \{Y_1, \dots, Y_n\}</span>. If <span class="math inline">F</span> is known, the cdf of <span class="math inline">M_n</span> is given by <span class="math inline">P\{M_n \leq z \} = P\{Y_1 \leq z, \dots, Y_n \leq z\} = \left(F(z)\right)^n</span>. However, <span class="math inline">F</span> is often not known in practice. This gap is filled by Extreme Value Theory, which studies approximate families of models for <span class="math inline">F^n</span> so that extremes can be modeled and their uncertainty quantified.</p>
+<p>It is well known, due to the <a href="02-tools.html#sec-clt">central limit theorem</a>, that the average of a set of iid random variables will converge to the Normal distribution if the mean and variance both exist and are finite. The Fisher-Tippett-Gnedenko (FTG) Theorem provides an analogous result for the maximum. It was developed in a series of papers by <span class="citation" data-cites="Frechet1927">Fréchet (<a href="references.html#ref-Frechet1927" role="doc-biblioref">1927</a>)</span>, <span class="citation" data-cites="Fisher1928">Fisher and Tippett (<a href="references.html#ref-Fisher1928" role="doc-biblioref">1928</a>)</span>, and <span class="citation" data-cites="Gnedenko1943">Gnedenko (<a href="references.html#ref-Gnedenko1943" role="doc-biblioref">1943</a>)</span>. Independently, <span class="citation" data-cites="Mises1936">von Mises (<a href="references.html#ref-Mises1936" role="doc-biblioref">1936</a>)</span> proposed a similar result. The FTG Theorem states that if the maximum can be scaled so that it converges, then the scaled maximum will converge to either a Gumbel, Fréchet or Weibull distribution <span class="citation" data-cites="coles2001introduction">(<a href="references.html#ref-coles2001introduction" role="doc-biblioref">Coles 2001, p46</a>)</span>; no other limits are possible.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Fisher-Tippett-Gnedenko Theorem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If there exist sequences <span class="math inline">\{a_n\}</span> and <span class="math inline">\{b_n\}</span> such that <span class="math display">
+  P\left\{ \frac{(M_n - a_n)}{b_n} \leq z \right\} \rightarrow G(z) \quad \text{as} \quad n \to \infty,
+</span> where <span class="math inline">G</span> is a non-degenerate cumulative distribution function, then <span class="math inline">G</span> belongs to one of the following families: <span class="math display">\begin{align*}
+  &amp;\text{Gumbel} :  &amp;&amp; G(z) = \exp\left(-\exp \left[- \Big(\frac{z-b}{a}\Big) \right] \right), \quad -\infty &lt; z &lt; \infty , \\
+  &amp;\text{Fréchet} : &amp;&amp; G(z) =
+    \begin{cases}
+      0 ,                                                           &amp; z \leq b  , \\
+      \exp \left( - \left( \frac{z-b}{a}\right)^{-\alpha} \right) , &amp; z &gt; b    ,
+    \end{cases}                     \\
+  &amp;\text{Weibull} : &amp;&amp; G(z) =
+    \begin{cases}
+      \exp \left( - \left(- \left[\frac{z-b}{a}\right]\right)^{\alpha} \right) , &amp; z &lt; b  ,    \\
+      1 ,                                                                        &amp; z \geq b  ,
+    \end{cases}
+\end{align*}</span> for parameters <span class="math inline">a, b</span> and <span class="math inline">\alpha</span> where <span class="math inline">a, \alpha &gt;0</span>.</p>
+</div>
+</div>
+<p>The three types of limits correspond to different forms of the tail behaviour of <span class="math inline">F</span>.</p>
+<ul>
+<li>When <span class="math inline">F</span> has a finite upper bound, such as with a uniform distribution, then <span class="math inline">G</span> is a Weibull distribution.</li>
+<li>When <span class="math inline">F</span> has exponential tails, such as with a Normal distribution or a Gamma distribution, then <span class="math inline">G</span> is a Gumbel distribution.</li>
+<li>When <span class="math inline">F</span> has heavy tails including polynomial decay, then <span class="math inline">G</span> is a Fréchet distribution. One example is when <span class="math inline">F</span> itself is a Fréchet distribution with <span class="math inline">F(y)= e^{-1/y}</span>, <span class="math inline">y&gt;0</span>.</li>
+</ul>
+<p>If we take the negative of the random variables <span class="math inline">Y_1,\dots,Y_n</span>, it becomes clear that a similar result holds for the minimum.</p>
+<p>These three families of distributions can be further combined into a single family by using the following cdf known as the Generalized Extreme Value (GEV) distribution, <span id="eq-EVT4"><span class="math display">
+  G(z) = \exp\left\{ -\left[ 1 + \xi\Big(\frac{z - \mu}{\sigma} \Big)\right]^{-1/\xi} \right\} ,
+\tag{2.15}</span></span> where the domain of the function is <span class="math inline">\{z: 1 + \xi (z - \mu)/\sigma &gt;0 \}</span>. The location parameter is <span class="math inline">\mu\in\mathbb{R}</span>, <span class="math inline">\sigma&gt;0</span> is the scale parameter, while <span class="math inline">\xi\in\mathbb{R}</span> is the shape parameter. When <span class="math inline">\xi = 0</span> we obtain a Gumbel distribution with exponentially decaying tails. When <span class="math inline">\xi &lt; 0</span> we get a Weibull distribution with a finite upper end, and when <span class="math inline">\xi &gt; 0</span> we get a Fréchet family of distributions with heavy tails including polynomial tails.</p>
+<p>To illustrate, suppose <span class="math inline">F</span> is a standard Normal distribution N(0,1) and we have <span class="math inline">n=1000</span> observations, <span class="math inline">Y_1,\dots,Y_n</span>. Then we know that the distribution of the maximum is given by <span class="math display">
+  P\left\{ \max \{Y_1, \dots, Y_n\} \leq z \right\} = \left[ \Phi(z) \right]^n,
+</span> so the density of the maximum is given by <span id="eq-maxn01"><span class="math display">
+  f(z) = n \left[ \Phi(z) \right]^{n-1} \phi(z).
+\tag{2.16}</span></span></p>
+<p>According to the FTG theorem, the distribution of the maximum can be approximated by a Gumbel distribution. We can find the parameters of the Gumbel distribution by estimating them from simulated maximums. We simulate 2000 maximums (each from 1000 N(0,1) draws), and fit a Gumbel distribution to the resulting data. The resulting Gumbel distribution is shown in <a href="#fig-evdexample" class="quarto-xref">Figure&nbsp;<span>2.18</span></a> (in blue), along with the true distribution of the maximum given by <a href="#eq-maxn01" class="quarto-xref">Equation&nbsp;<span>2.16</span></a> (in black). The approximation is so good, that it is hard to distinguish the two distributions.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>maximums <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">2000</span>, <span class="fu">max</span>(<span class="fu">rnorm</span>(n)))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit GEV distribution</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>gev_fit <span class="ot">&lt;-</span> evd<span class="sc">::</span><span class="fu">fgev</span>(maximums)<span class="sc">$</span>estimate</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">8</span>, <span class="at">l=</span><span class="dv">500</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot true distribution and GEV distribution</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Exact =</span> <span class="fu">dist_density</span>(<span class="at">x =</span> x, <span class="at">density =</span> n <span class="sc">*</span> <span class="fu">pnorm</span>(x)<span class="sc">^</span>(n<span class="dv">-1</span>) <span class="sc">*</span> <span class="fu">dnorm</span>(x)),</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">GEV approximation</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">dist_gev</span>(<span class="at">location =</span> gev_fit[<span class="st">"loc"</span>], <span class="at">scale =</span> gev_fit[<span class="st">"scale"</span>], <span class="at">shape =</span> gev_fit[<span class="st">"shape"</span>])</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-evdexample" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-evdexample-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-evdexample-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-evdexample-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.18: Distribution of the maximum of 1000 N(0,1) draws. Here we have simulated 2000 such maximums and shown the estimated GEV distribution (in black), along with the true distribution (in blue). The approximation is so good, that it is hard to distinguish the two distributions.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="the-generalized-pareto-distribution" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="the-generalized-pareto-distribution">The Generalized Pareto Distribution</h3>
+<p>The Peaks Over Threshold (POT) approach regards extremes as observations greater than a threshold <span class="math inline">u</span>. The probability distribution of <em>exceedances</em> above a specified threshold <span class="math inline">u</span> can be expressed as the conditional distribution <span id="eq-POT3"><span class="math display">
+  H(y) = P\left \{Y \leq u + y \mid Y &gt; u \right \}
+  = \frac{ F(u+y) - F(u)}{1 - F(u)}.
+\tag{2.17}</span></span> When the distribution <span class="math inline">F</span> satisfies the FTG theorem, then <span class="citation" data-cites="coles2001introduction">(<a href="references.html#ref-coles2001introduction" role="doc-biblioref">Coles 2001, p75</a>)</span> <span class="math inline">H</span> is a <strong>Generalized Pareto Distribution</strong> (GPD) defined by <span id="eq-POT"><span class="math display">
+    H(y) \approx 1 - \Big( 1 + \frac{\xi y}{\sigma_u} \Big)^{-1/\xi} ,
+   \tag{2.18}</span></span> where the domain of <span class="math inline">H</span> is <span class="math inline">\{y: y &gt;0 \text{ and } (1 + \xi y)/\sigma_u &gt;0 \}</span>, and <span class="math inline">\sigma_u = \sigma + \xi(u- \mu)</span>. The GPD parameters are determined from the associated GEV parameters. In particular, the shape parameter <span class="math inline">\xi</span> is the same in both distributions.</p>
+<p>Continuing the previous example, we now look at the probability distribution of exceedances above 3 from a N(0,1) distribution. We simulate 100,000 N(0,1) values and only keep those above 3. Then two GPD estimates are drawn. The blue GPD uses the parameters obtained previously from the GEV estimate, while the orange GPD estimates the parameters from the exceedances.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate random normal data above 3 and fit GPD distribution</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">rnorm</span>(<span class="fl">1e5</span>)) <span class="sc">|&gt;</span> <span class="fu">filter</span>(y <span class="sc">&gt;=</span> <span class="dv">3</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>gpd_fit <span class="ot">&lt;-</span> evd<span class="sc">::</span><span class="fu">fpot</span>(df<span class="sc">$</span>y, <span class="dv">3</span>)<span class="sc">$</span>estimate</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Show both distributions</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">GPD_from_GEV</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">dist_gpd</span>(<span class="at">location =</span> <span class="dv">3</span>, <span class="at">scale =</span> gev_fit[<span class="st">"scale"</span>], <span class="at">shape =</span> gev_fit[<span class="st">"shape"</span>]),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">GPD_estimate</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">dist_gpd</span>(<span class="at">location =</span> <span class="dv">3</span>, <span class="at">scale =</span> gpd_fit[<span class="st">"scale"</span>], <span class="at">shape =</span> gpd_fit[<span class="st">"shape"</span>])</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>() <span class="sc">+</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rug</span>(<span class="at">data =</span> df, <span class="fu">aes</span>(<span class="at">x =</span> y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-pot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-univariate_files/figure-html/fig-pot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.19: Conditional distribution of exceedances above 3 from N(0,1) draws. Here we have simulated 100,000 values and only kept those above 3. The density implied by the GEV distribution is shown in blue, and an estimated GPD distribution is shown in orange.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The GEV (blue) estimate is better because it is based on more information (2000 maximums rather than 151 exceedances).</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-coles2001introduction" class="csl-entry" role="listitem">
+Coles, S. 2001. <em>An Introduction to Statistical Modeling of Extreme Values</em>. Springer Series in Statistics. London UK: Springer.
+</div>
+<div id="ref-Fisher1928" class="csl-entry" role="listitem">
+Fisher, R A, and L H C Tippett. 1928. <span>“Limiting Forms of the Frequency Distribution of the Largest or Smallest Member of a Sample.”</span> <em>Mathematical Proceedings of the Cambridge Philosophical Society</em> 24 (2): 180–90.
+</div>
+<div id="ref-Forbes2011" class="csl-entry" role="listitem">
+Forbes, C S, M Evans, N Hastings, and B Peacock. 2011. <em>Statistical Distributions</em>. 4th ed. Hoboken, NJ: Wiley-Blackwell. <a href="https://doi.org/10.1002/9780470627242">https://doi.org/10.1002/9780470627242</a>.
+</div>
+<div id="ref-Frechet1927" class="csl-entry" role="listitem">
+Fréchet, M. 1927. <span>“Sur La Loi de Probabilité de l’écart Maximum.”</span> <em>Annales de La Société Polonaise de Mathématique</em> 6: 93–116.
+</div>
+<div id="ref-Gnedenko1943" class="csl-entry" role="listitem">
+Gnedenko, B. 1943. <span>“Sur La Distribution Limite Du Terme Maximum d’une Serie Aleatoire.”</span> <em>Annals of Mathematics</em>, 423–53.
+</div>
+<div id="ref-HDR96" class="csl-entry" role="listitem">
+Hyndman, R J. 1996. <span>“Computing and Graphing Highest Density Regions.”</span> <em>The American Statistician</em> 50 (2): 120–26. <a href="http://www.jstor.org/stable/2684423">http://www.jstor.org/stable/2684423</a>.
+</div>
+<div id="ref-HF96" class="csl-entry" role="listitem">
+Hyndman, R J, and Y Fan. 1996. <span>“Sample Quantiles in Statistical Packages.”</span> <em>The American Statistician</em> 50 (4): 361–65.
+</div>
+<div id="ref-JKunicontinuous1" class="csl-entry" role="listitem">
+Johnson, N L, S Kotz, and N Balakrishnan. 1994. <em>Continuous Univariate Distributions</em>. 2nd ed. Vol. 1. New York, USA: John Wiley &amp; Sons.
+</div>
+<div id="ref-JKunicontinuous2" class="csl-entry" role="listitem">
+———. 1995. <em>Continuous Univariate Distributions</em>. 2nd ed. Vol. 2. New York, USA: John Wiley &amp; Sons.
+</div>
+<div id="ref-Rousseeuw1993-tq" class="csl-entry" role="listitem">
+Rousseeuw, Peter J, and Christophe Croux. 1993. <span>“Alternatives to the Median Absolute Deviation.”</span> <em>Journal of the American Statistical Association</em> 88: 1273–83. <a href="https://doi.org/10.1080/01621459.1993.10476408">https://doi.org/10.1080/01621459.1993.10476408</a>.
+</div>
+<div id="ref-Scott2015" class="csl-entry" role="listitem">
+Scott, D W. 2015. <em>Multivariate Density Estimation: Theory, Practice, and Visualization</em>. 2nd ed. Wiley.
+</div>
+<div id="ref-SJ91" class="csl-entry" role="listitem">
+Sheather, S J, and M C Jones. 1991. <span>“A Reliable Data-Based Bandwidth Selection Method for Kernel Density Estimation.”</span> <em>Journal of the Royal Statistical Society. Series B</em> 53 (3): 683–90.
+</div>
+<div id="ref-Silverman1986" class="csl-entry" role="listitem">
+Silverman, B W. 1986. <em>Density Estimation for Statistics and Data Analysis</em>. Chapman; Hall.
+</div>
+<div id="ref-van2000asymptotic" class="csl-entry" role="listitem">
+Van der Vaart, A W. 2000. <em>Asymptotic Statistics</em>. Cambridge University Press.
+</div>
+<div id="ref-Mises1936" class="csl-entry" role="listitem">
+von Mises, R. 1936. <span>“La Distribution de La Plus Grande de n Valeurs.”</span> <em>Rev. Math. Union Interbalcanique</em> 1: 141–60.
+</div>
+<div id="ref-WJ1995" class="csl-entry" role="listitem">
+Wand, M P, and M C Jones. 1995. <em>Kernel Smoothing</em>. New York: Chapman &amp; Hall.
+</div>
+<div id="ref-Wasserman2004" class="csl-entry" role="listitem">
+Wasserman, L. 2004. <em>All of Statistics: A Concise Course in Statistical Inference</em>. Springer Texts in Statistics. New York: Springer. <a href="https://doi.org/10.1007/978-0-387-21736-9">https://doi.org/10.1007/978-0-387-21736-9</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/OTexts\.com\/weird");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./01-intro.html" class="pagination-link" aria-label="Introduction">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./03-multivariate.html" class="pagination-link" aria-label="Multivariate probability distributions">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Published by OTexts using <a href="https://quarto.org">Quarto</a>. <i class="fa-solid fa-copyright" aria-label="copyright"></i> <a href="https://robjhyndman.com">Rob J Hyndman</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; Distance-based methods – That's weird! Anomaly&nbsp;detection using&nbsp;R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./08-highdim.html" rel="next">
+<link href="./06-density.html" rel="prev">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./07-distance.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">That’s weird! Anomaly&nbsp;detection using&nbsp;R</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-univariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-multivariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-boxplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-density.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-distance.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-functional.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-network.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Network and graph data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-imagevideo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image and video data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-text.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Categorical and textual data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Spaces of probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-cybersecurity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Network intrusions and fraud</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bibliography</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix algebra</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title"><b>Sections</b></h2>
+   
+  <ul>
+  <li><a href="#sec-distances" id="toc-sec-distances" class="nav-link active" data-scroll-target="#sec-distances"><span class="header-section-number">7.1</span> Multivariate pairwise distances</a>
+  <ul class="collapse">
+  <li><a href="#euclidean-distance" id="toc-euclidean-distance" class="nav-link" data-scroll-target="#euclidean-distance">Euclidean distance</a></li>
+  <li><a href="#manhattan-distance" id="toc-manhattan-distance" class="nav-link" data-scroll-target="#manhattan-distance">Manhattan distance</a></li>
+  <li><a href="#minkowski-distance" id="toc-minkowski-distance" class="nav-link" data-scroll-target="#minkowski-distance">Minkowski distance</a></li>
+  <li><a href="#chebyshev-distance" id="toc-chebyshev-distance" class="nav-link" data-scroll-target="#chebyshev-distance">Chebyshev Distance</a></li>
+  <li><a href="#mahalanobis-distance" id="toc-mahalanobis-distance" class="nav-link" data-scroll-target="#mahalanobis-distance">Mahalanobis distance</a></li>
+  </ul></li>
+  <li><a href="#nearest-neighbours" id="toc-nearest-neighbours" class="nav-link" data-scroll-target="#nearest-neighbours"><span class="header-section-number">7.2</span> Nearest neighbours</a></li>
+  <li><a href="#local-outlier-factors" id="toc-local-outlier-factors" class="nav-link" data-scroll-target="#local-outlier-factors"><span class="header-section-number">7.3</span> Local outlier factors</a>
+  <ul class="collapse">
+  <li><a href="#example-old-faithful-data" id="toc-example-old-faithful-data" class="nav-link" data-scroll-target="#example-old-faithful-data">Example: Old Faithful data</a></li>
+  </ul></li>
+  <li><a href="#stahel-donoho-outlyingness" id="toc-stahel-donoho-outlyingness" class="nav-link" data-scroll-target="#stahel-donoho-outlyingness"><span class="header-section-number">7.4</span> Stahel-Donoho outlyingness</a></li>
+  <li><a href="#covmcd" id="toc-covmcd" class="nav-link" data-scroll-target="#covmcd"><span class="header-section-number">7.5</span> CovMCD</a></li>
+  <li><a href="#detect-deviating-cells-algorithm" id="toc-detect-deviating-cells-algorithm" class="nav-link" data-scroll-target="#detect-deviating-cells-algorithm"><span class="header-section-number">7.6</span> Detect deviating cells algorithm</a></li>
+  <li><a href="#stray-and-hdoutliers-algorithms" id="toc-stray-and-hdoutliers-algorithms" class="nav-link" data-scroll-target="#stray-and-hdoutliers-algorithms"><span class="header-section-number">7.7</span> Stray and HDoutliers algorithms</a></li>
+  <li><a href="#bacon-algorithm" id="toc-bacon-algorithm" class="nav-link" data-scroll-target="#bacon-algorithm"><span class="header-section-number">7.8</span> Bacon algorithm</a></li>
+  <li><a href="#isolation-forest" id="toc-isolation-forest" class="nav-link" data-scroll-target="#isolation-forest"><span class="header-section-number">7.9</span> Isolation forest</a></li>
+  <li><a href="#clustering-methods" id="toc-clustering-methods" class="nav-link" data-scroll-target="#clustering-methods"><span class="header-section-number">7.10</span> Clustering methods</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-27933797-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-27933797-2');
+  gtag('config', 'G-JKBLG3XQGY')
+</script>
+<link href="https://fonts.googleapis.com/css?family=Fira+Sans|Noto+Serif" rel="stylesheet">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack-subset.css">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-distance-methods" class="quarto-section-identifier"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Distance-based anomaly detection methods are based on the distances between observations. The pairwise distances between observations are computed, and anomalies are identified as those observations that are far from other observations.</p>
+<p>Before we discuss some of the methods that fall into this class of algorithms, we will first discuss some of the different ways of measuring distances between observations.</p>
+<section id="sec-distances" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="sec-distances"><span class="header-section-number">7.1</span> Multivariate pairwise distances</h2>
+<p>Suppose our observations are denoted by <span class="math inline">\bm{y}_1,\dots,\bm{y}_n</span>. In univariate data, the distance between any two observations is simply the absolute difference between the points. But in multivariate data, there are many different ways of measuring distances between observations, even when the data are all numerical.</p>
+<section id="euclidean-distance" class="level3">
+<h3 class="anchored" data-anchor-id="euclidean-distance">Euclidean distance</h3>
+<p>Perhaps the most obvious way to define the distance between any two points <span class="math inline">\bm{y}_i</span> and <span class="math inline">\bm{y}_j</span> is to measure the length of the straight line between the points. This is commonly known as Euclidean distance, named after the famous Greek mathematician Euclid, and can be defined as <span class="math display">\|\bm{y}_i - \bm{y}_j\|_2 = \sqrt{\sum_{k=1}^d (y_{ik}-y_{jk})^2}.</span> This is also known as the <span class="math inline">L_2</span> distance. For <span class="math inline">d=1</span> or <span class="math inline">d=2</span>, this is the physical distance between the points when plotted on a strip plot or a scatterplot (provided there is no jittering used).</p>
+<p>The <code>dist()</code> function will return a distance matrix containing all pairwise distances between observations. The argument <code>method</code> specifies the type of distance to compute, with the default being Euclidean distance.</p>
+<p>Here is an example using only the first five observations of the <code>old_faithful</code> data set (omitting the time stamp). Because the distances are symmetric, only the lower triangle of the matrix is computed.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(oldfaithful, <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 3
+#&gt;   time                duration waiting
+#&gt;   &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 2015-01-02 14:53:00      271    5040
+#&gt; 2 2015-01-09 23:55:00      247    6060
+#&gt; 3 2015-02-07 00:49:00      203    5460
+#&gt; 4 2015-02-14 01:09:00      195    5221
+#&gt; 5 2015-02-21 01:12:00      210    5401</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>of <span class="ot">&lt;-</span> <span class="fu">head</span>(oldfaithful, <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>time)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span> <span class="fu">dist</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;         1       2       3       4
+#&gt; 2 1020.28                        
+#&gt; 3  425.47  601.61                
+#&gt; 4  196.31  840.61  239.13        
+#&gt; 5  366.12  660.04   59.41  180.62</code></pre>
+</div>
+</div>
+</section>
+<section id="manhattan-distance" class="level3">
+<h3 class="anchored" data-anchor-id="manhattan-distance">Manhattan distance</h3>
+<p>The Manhattan distance (or absolute distance) between two observations is given by <span class="math display">\|\bm{y}_i - \bm{y}_j\|_1 = \sum_{k=1}^d |y_{ik}-y_{jk}|.</span> This is also known as the <span class="math inline">L_1</span> distance. It is called the Manhattan distance as it gives the shortest path between the corners of city blocks (denoted as points on a grid) when those blocks are rectangular, as they mostly are in Manhattan. For the same reason, it is also sometimes called the “taxicab” distance or the “city block” distance.</p>
+<p>Let’s compute the Manhattan distances for the same five observations from the <code>oldfaithful</code> data set.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span> <span class="fu">dist</span>(<span class="at">method =</span> <span class="st">"manhattan"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;      1    2    3    4
+#&gt; 2 1044               
+#&gt; 3  488  644          
+#&gt; 4  257  891  247     
+#&gt; 5  422  696   66  195</code></pre>
+</div>
+</div>
+</section>
+<section id="minkowski-distance" class="level3">
+<h3 class="anchored" data-anchor-id="minkowski-distance">Minkowski distance</h3>
+<p>This generalizes the Manhattan and Euclidean distances to use powers of <span class="math inline">p</span> to define the <span class="math inline">L_p</span> distance: <span class="math display">\|\bm{y}_i - \bm{y}_j\|_p = \left(\sum_{k=1}^d (y_{ik}-y_{jk})^p\right)^{1/p}.</span> It is named after the German mathematician, Hermann Minkowski. When <span class="math inline">p=1</span> this is the Manhattan distance, and when <span class="math inline">p=2</span> this is the Euclidean distance.</p>
+<p>Here is the Minkowsi distance with <span class="math inline">p = 3</span> for the same five observations from the <code>oldfaithful</code> data set.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span> <span class="fu">dist</span>(<span class="at">method =</span> <span class="st">"minkowski"</span>, <span class="at">p =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;         1       2       3       4
+#&gt; 2 1020.00                        
+#&gt; 3  420.59  600.08                
+#&gt; 4  185.36  839.07  239.00        
+#&gt; 5  361.58  659.04   59.03  180.03</code></pre>
+</div>
+</div>
+</section>
+<section id="chebyshev-distance" class="level3">
+<h3 class="anchored" data-anchor-id="chebyshev-distance">Chebyshev Distance</h3>
+<p>The maximum distance between any components of <span class="math inline">\bm{y}_i</span> and <span class="math inline">\bm{y}_j</span> is known as the Chebyshev distance (after the Russian mathematician, Pafnuty Chebyshev), given by <span class="math display">\|\bm{y}_i - \bm{y}_j\|_{\text{max}} = \max_k |y_{ik}-y_{jk}|.</span></p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span> <span class="fu">dist</span>(<span class="at">method =</span> <span class="st">"maximum"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;      1    2    3    4
+#&gt; 2 1020               
+#&gt; 3  420  600          
+#&gt; 4  181  839  239     
+#&gt; 5  361  659   59  180</code></pre>
+</div>
+</div>
+<p>This is also known as chessboard distance, as it is the number of moves a king would have to travel on a chessboard to move between two squares. The Chebyshev distance is equivalent to the Minkowski distance with <span class="math inline">p=\infty</span>.</p>
+<p>Notice that all four of the distances introduced so far are equal to the absolute difference between observations when <span class="math inline">d=1</span>. The next distance does not have this property.</p>
+</section>
+<section id="mahalanobis-distance" class="level3">
+<h3 class="anchored" data-anchor-id="mahalanobis-distance">Mahalanobis distance</h3>
+<p>When the variables have different scales, the variables with the largest ranges will dominate the distance measures. In the Old Faithful example, durations are much longer than waiting times, and so the duration variable is dominating the calculation of distances. Consequently, it is often preferable to scale the data before computing distances.</p>
+<p>Suppose we scale the data using the robust multivariate approach described in <a href="03-multivariate.html#sec-scaling" class="quarto-xref"><span>Section 3.9</span></a>, so that the scaled data are given by <span class="math inline">\bm{z}_i = \bm{U} (\bm{y}_i - \bm{m})</span>, where <span class="math inline">\bm{m}</span> is the pointwise median, and <span class="math inline">\bm{U}'\bm{U} = \bm{S}_{\text{OGK}}^{-1}</span> is the Cholesky decomposition of the inverse of <span class="math inline">\bm{S}_{\text{OGK}}</span>, a robust estimate of the covariance matrix of the data. Then the Euclidean distance between <span class="math inline">\bm{z}_i</span> and <span class="math inline">\bm{z}_j</span> is given by <span class="math display">
+  \| \bm{z}_i - \bm{z}_j\|_2 = \sqrt{(\bm{y}_i - \bm{y}_j)' \bm{U}' \bm{U} (\bm{y}_i - \bm{y}_j)} =  \sqrt{(\bm{y}_i - \bm{y}_j)' \bm{S}_{\text{OGK}}^{-1} (\bm{y}_i - \bm{y}_j)}
+</span> This is known as the Mahalanobis distance, named after the Indian statistician Prasanta Chandra Mahalanobis (although he wasn’t using a robust measure of covariance). It is a multivariate generalization of the number of standard deviations between any two observations.</p>
+<p>Mahalanobis distance is not an option provided by the <code>dist()</code> function, so we will need to compute the scaled data first.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>time) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mvscale</span>()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>z <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dist</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;        1      2      3      4
+#&gt; 2 2.6920                     
+#&gt; 3 3.5672 1.9719              
+#&gt; 4 3.6898 2.4090 0.4951       
+#&gt; 5 3.1821 1.7619 0.3861 0.6618</code></pre>
+</div>
+</div>
+<p>For more information about pairwise distances, see <span class="citation" data-cites="Borg2005">Borg and Groenen (<a href="references.html#ref-Borg2005" role="doc-biblioref">2005</a>)</span>.</p>
+</section>
+</section>
+<section id="nearest-neighbours" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="nearest-neighbours"><span class="header-section-number">7.2</span> Nearest neighbours</h2>
+<p>If there are <span class="math inline">n</span> observations, then there are <span class="math inline">n(n-1)/2</span> pairwise distances to compute, so this is an <span class="math inline">O(n^2)</span> operation which can take a long time for large <span class="math inline">n</span>.</p>
+<p>Some algorithms only compute the pairwise distances of the <span class="math inline">k</span> nearest observations, although finding those observations requires some additional distances to be computed. For some types of distances, efficient solutions are available using kd trees <span class="citation" data-cites="Bentley1975 Arya1998">(<a href="references.html#ref-Bentley1975" role="doc-biblioref">Bentley 1975</a>; <a href="references.html#ref-Arya1998" role="doc-biblioref">Arya et al. 1998</a>)</span> that find the <span class="math inline">k</span> nearest neighbours to each observation in <span class="math inline">O(n\log(n))</span> time.</p>
+<p>The calculation of <span class="math inline">k</span> nearest neighbours is useful for more than anomaly detection problems. It is also the basis of a popular classification method due to the Berkeley statisticians Evelyn Fix and Joe Hodges <span class="citation" data-cites="knn">(<a href="references.html#ref-knn" role="doc-biblioref">Fix and Hodges 1989</a>)</span> which is often known as the “kNN algorithm”.</p>
+<p>Suppose we use the Old Faithful data to find eruptions that are neighbours in the (duration, waiting) space. The <code>dbscan</code> package uses kd trees to quickly identify the <span class="math inline">k</span> nearest observations to each eruption. We will use the scaled data computed in the last section to find the 5 nearest neighbours to each eruption.</p>
+<div class="cell" data-layout-align="center" data-depends="zscore">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find 5 nearest neighbours to each eruption</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>knn <span class="ot">&lt;-</span> dbscan<span class="sc">::</span><span class="fu">kNN</span>(z, <span class="at">k =</span> <span class="dv">5</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># First eruption in the data set</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>oldfaithful[<span class="dv">1</span>, ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 3
+#&gt;   time                duration waiting
+#&gt;   &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 2015-01-02 14:53:00      271    5040</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Five closest observations</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>oldfaithful[knn<span class="sc">$</span>id[<span class="dv">1</span>, ], ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 3
+#&gt;   time                duration waiting
+#&gt;   &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 2021-04-13 21:48:00      270    5040
+#&gt; 2 2018-09-15 19:32:00      268    5040
+#&gt; 3 2018-08-08 00:47:00      272    5160
+#&gt; 4 2016-01-28 20:36:00      270    5220
+#&gt; 5 2018-09-02 23:25:00      275    5340</code></pre>
+</div>
+</div>
+<p>For large data sets, approximations are available which speed up the computation even more, but are less accurate in finding the <span class="math inline">k</span> nearest neighbours. The <code>approx</code> argument specifies a distance tolerance which makes the process faster for large data sets, although the neighbours returned may not be the exact nearest neighbours.</p>
+<div class="cell" data-layout-align="center" data-depends="zscore">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find 5 approximate nearest neighbours to each eruption</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>kann <span class="ot">&lt;-</span> dbscan<span class="sc">::</span><span class="fu">kNN</span>(z, <span class="at">k =</span> <span class="dv">5</span>, <span class="at">approx =</span> <span class="dv">2</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Five closest observations</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>oldfaithful[kann<span class="sc">$</span>id[<span class="dv">1</span>, ], ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 3
+#&gt;   time                duration waiting
+#&gt;   &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 2021-04-13 21:48:00      270    5040
+#&gt; 2 2018-09-15 19:32:00      268    5040
+#&gt; 3 2018-08-08 00:47:00      272    5160
+#&gt; 4 2016-01-28 20:36:00      270    5220
+#&gt; 5 2018-09-09 20:33:00      266    5280</code></pre>
+</div>
+</div>
+<p>In this case, the same five observations have been found.</p>
+</section>
+<section id="local-outlier-factors" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="local-outlier-factors"><span class="header-section-number">7.3</span> Local outlier factors</h2>
+<p>A popular way of using <span class="math inline">k</span>-nearest neighbours for anomaly detection is via local outlier factors <span class="citation" data-cites="lof">(<a href="references.html#ref-lof" role="doc-biblioref">Breunig et al. 2000</a>)</span>. This is similar to the idea discussed in <a href="06-density.html#sec-kdescores" class="quarto-xref"><span>Section 6.4</span></a> of finding points with low probability density estimates, in that it is designed to find points in areas with few surrounding observations.</p>
+<p>Suppose we write the distance between observations <span class="math inline">\bm{y}_i</span> and <span class="math inline">\bm{y}_j</span> as <span class="math inline">\|\bm{y}_i - \bm{y}_j\|</span>, and let <span class="math inline">d_{i,k}</span> be the distance between observation <span class="math inline">\bm{y}_i</span> and its <span class="math inline">k</span>th nearest neighbour.</p>
+<p>Let <span class="math inline">N_{i,k}</span> be the set of <span class="math inline">k</span> nearest neighbours within <span class="math inline">d_{i,k}</span> of <span class="math inline">\bm{y}_i</span>. (If there are multiple observations all exactly <span class="math inline">d_{i,k}</span> from <span class="math inline">\bm{y}_i</span>, then <span class="math inline">N_{i,k}</span> may contain more than <span class="math inline">k</span> observations, but we will ignore that issue here.)</p>
+<p>Note that an observation <span class="math inline">\bm{y}_j</span> may be within <span class="math inline">N_{i,k}</span> while <span class="math inline">\bm{y}_i</span> does not fall within <span class="math inline">N_{j,k}</span>, as shown in the diagram below.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-njk" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-njk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="07-distance_files/figure-html/fig-njk-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-njk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.1: A synthetic data set of 11 observations. Nearest neighbourhoods containing five observations each are shown for <span class="math inline">\bm{y}_1</span> (in orange) and <span class="math inline">\bm{y}_2</span> (in blue). The neighbourhood of <span class="math inline">\bm{y}_1</span> contains <span class="math inline">\bm{y}_2</span> in its nearest five observations, but <span class="math inline">\bm{y}_2</span> does not include <span class="math inline">\bm{y}_1</span> in its nearest five observations.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Let <span class="math inline">r_k(i,j) = \max(d_{j,k}, \|\bm{y}_i-\bm{y}_j\|)</span> be the “reachability” of <span class="math inline">\bm{y}_i</span> from <span class="math inline">\bm{y}_j</span>. Thus, <span class="math inline">r_k(i,j)</span> is the distance between observations <span class="math inline">\bm{y}_i</span> and <span class="math inline">\bm{y}_j</span> when they are far from each other, but is equal to <span class="math inline">d_{j,k}</span> if <span class="math inline">\bm{y}_i</span> is one of the <span class="math inline">k</span> nearest neighbours of <span class="math inline">\bm{y}_j</span>. The reachability is a truncated variant of the usual Euclidean distance <span class="math inline">\|\bm{y}_i-\bm{y}_j\|</span> so that it is not less than <span class="math inline">d_{j,k}</span>.</p>
+<p>The average reachability of <span class="math inline">\bm{y}_i</span> <em>from</em> its nearest neighbours is given by <span class="math display">
+  \bar{r}_{i,k} = k^{-1} \sum_{\bm{y}_j \in N_{i,k}} r_k(i,j)
+</span> This is not the same as the average reachability of the neighbours <em>from</em> <span class="math inline">\bm{y}_i</span> which, by definition, would be <span class="math inline">d_{i,k}</span>. An observation will have high average reachability if it is far from its neighbours, whereas it will have low average reachability if it has many close neighbours.</p>
+<p>Then the local outlier factor for observation <span class="math inline">\bm{y}_i</span> is given by <span class="math display">
+\ell_{i,k} = \frac{\bar{r}_{i,k}}{k}\sum_{\bm{y}_j \in N_{i,k}} \bar{r}^{-1}_{j,k}.
+</span> Thus, it is the ratio between <span class="math inline">\bar{r}_{i,k}</span> and the average value of <span class="math inline">\bar{r}^{-1}_{j,k}</span> for points within its neighbourhood.</p>
+<p>This provides a relative measure of the density of each observation compared to its neighbours. An observation is regarded as an anomaly if it is in a low-density region (far from its neighbours) while its neighbours are in higher density regions (with many neighbours nearby). A value of <span class="math inline">\ell_{i,k}</span> much greater than 1 shows that the observation has much larger average reachability compared to its neighbours, and so is regarded as an anomaly.</p>
+<p>One problem with this definition is that <span class="math inline">\ell_{i,k}</span> can be infinite. If the data set contains at least <span class="math inline">k+1</span> identical observations, then the average reachability <span class="math inline">\bar{r}_k(j,k)</span> will be 0 if <span class="math inline">\bm{y}_j</span> is one of the group of identical observations. Consequently, <span class="math inline">\ell_{i,k} = \infty</span> if <span class="math inline">\bm{y}_i</span> is a neighbour to one of the group of identical observations. In this book we use a slightly different definition from that used elsewhere and replace these infinite values with zeros.</p>
+<p>Another problem is that it can be difficult to determine an appropriate value for <span class="math inline">k</span>.</p>
+<section id="example-old-faithful-data" class="level3">
+<h3 class="anchored" data-anchor-id="example-old-faithful-data">Example: Old Faithful data</h3>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>of_scores <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lof =</span> <span class="fu">lof_scores</span>(duration, <span class="at">k =</span> <span class="dv">150</span>))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>of_scores <span class="sc">|&gt;</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(lof))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2,261 × 4
+#&gt;    time                duration waiting    lof
+#&gt;    &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1 2015-12-07 00:09:00     7200    3420 752.  
+#&gt;  2 2018-04-25 19:08:00        1    5700   8.65
+#&gt;  3 2020-10-25 16:31:00      305    6060   3.26
+#&gt;  4 2020-05-07 22:55:00      304    6180   3.17
+#&gt;  5 2020-05-21 00:27:00      304    5640   3.17
+#&gt;  6 2019-03-14 19:28:00      302    5820   2.99
+#&gt;  7 2018-09-14 20:35:00      301    5640   2.90
+#&gt;  8 2019-07-25 06:32:00      300    5280   2.81
+#&gt;  9 2019-09-17 17:22:00      300    6060   2.81
+#&gt; 10 2020-05-07 20:02:00      299    5940   2.72
+#&gt; # ℹ 2,251 more rows</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>of_scores <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration, <span class="at">y =</span> lof)) <span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-ofscores" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ofscores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="07-distance_files/figure-html/fig-ofscores-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ofscores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.2: TBC
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Again, the two large scores correspond to the extreme 2 hour duration and the tiny 1 second duration. The value of <span class="math inline">k=150</span> has been chosen after experimenting with various values.</p>
+</section>
+</section>
+<section id="stahel-donoho-outlyingness" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="stahel-donoho-outlyingness"><span class="header-section-number">7.4</span> Stahel-Donoho outlyingness</h2>
+<p>The Stahel-Donoho outlyingness is a robust measure of outlyingness</p>
+<p><span class="citation" data-cites="Stahel81">Stahel (<a href="references.html#ref-Stahel81" role="doc-biblioref">1981</a>)</span>, <span class="citation" data-cites="Donoho81">Donoho (<a href="references.html#ref-Donoho81" role="doc-biblioref">1982</a>)</span>, <span class="citation" data-cites="Brys2005-pc">Brys, Hubert, and Rousseeuw (<a href="references.html#ref-Brys2005-pc" role="doc-biblioref">2005</a>)</span></p>
+<p>robustbase::adjOutlyingness</p>
+</section>
+<section id="covmcd" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="covmcd"><span class="header-section-number">7.5</span> CovMCD</h2>
+<p><span class="citation" data-cites="Rousseeuw1999-jt">Rousseeuw and Van Driessen (<a href="references.html#ref-Rousseeuw1999-jt" role="doc-biblioref">1999</a>)</span></p>
+<p>robustbase::covMcd</p>
+</section>
+<section id="detect-deviating-cells-algorithm" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="detect-deviating-cells-algorithm"><span class="header-section-number">7.6</span> Detect deviating cells algorithm</h2>
+<p><span class="citation" data-cites="Rousseeuw2016-wm">Rousseeuw and Van den Bossche (<a href="references.html#ref-Rousseeuw2016-wm" role="doc-biblioref">2016</a>)</span></p>
+</section>
+<section id="stray-and-hdoutliers-algorithms" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="stray-and-hdoutliers-algorithms"><span class="header-section-number">7.7</span> Stray and HDoutliers algorithms</h2>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>of_scores <span class="ot">&lt;-</span> of_scores <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">stray =</span> <span class="fu">stray_scores</span>(duration))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>of_scores <span class="sc">|&gt;</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(stray))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2,261 × 5
+#&gt;    time                duration waiting    lof    stray
+#&gt;    &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
+#&gt;  1 2015-12-07 00:09:00     7200    3420 752.   0.958   
+#&gt;  2 2018-04-25 19:08:00        1    5700   8.65 0.0124  
+#&gt;  3 2017-05-03 06:19:00       90    4740   1.79 0.00139 
+#&gt;  4 2015-11-21 20:27:00      150    3420   1.78 0.00125 
+#&gt;  5 2016-03-22 14:06:00      150    4860   1.78 0.00125 
+#&gt;  6 2016-07-13 21:55:00      150    4980   1.78 0.00125 
+#&gt;  7 2020-06-18 02:00:00       92    3600   1.67 0.00111 
+#&gt;  8 2021-08-14 21:38:06       92    3882   1.67 0.00111 
+#&gt;  9 2020-09-25 20:00:00       93    3540   1.61 0.000972
+#&gt; 10 2021-07-08 00:44:12      173   47628   1.63 0.000972
+#&gt; # ℹ 2,251 more rows</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>of_scores <span class="sc">|&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration, <span class="at">y =</span> stray)) <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-stray" class="quarto-float quarto-figure quarto-figure-center anchored" width="100%" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-stray-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="07-distance_files/figure-html/fig-stray-1.png" id="fig-stray" class="img-fluid quarto-figure quarto-figure-center anchored figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-stray-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.3
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><span class="citation" data-cites="Talagala2019-zv">Talagala, Hyndman, and Smith-Miles (<a href="references.html#ref-Talagala2019-zv" role="doc-biblioref">2019</a>)</span>, <span class="citation" data-cites="Wilkinson2017-rb">Wilkinson (<a href="references.html#ref-Wilkinson2017-rb" role="doc-biblioref">2017</a>)</span></p>
+</section>
+<section id="bacon-algorithm" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="bacon-algorithm"><span class="header-section-number">7.8</span> Bacon algorithm</h2>
+<p>blocked adaptive computationally efficient outlier nominators</p>
+<p><span class="citation" data-cites="Billor2000">Billor, Hadi, and Velleman (<a href="references.html#ref-Billor2000" role="doc-biblioref">2000</a>)</span></p>
+<p>robustX::mvBACON</p>
+</section>
+<section id="isolation-forest" class="level2" data-number="7.9">
+<h2 data-number="7.9" class="anchored" data-anchor-id="isolation-forest"><span class="header-section-number">7.9</span> Isolation forest</h2>
+<p>Isolation tree: Randomly partition data until every point is isolated or some depth is reached.</p>
+<p>Combine many isolation trees to form an isolation forest.</p>
+<p>Anomaly score inversely proportional to average depth of isolation trees.</p>
+<p>isotree package</p>
+<p><span class="citation" data-cites="Liu2008-dp">Liu, Ting, and Zhou (<a href="references.html#ref-Liu2008-dp" role="doc-biblioref">2008</a>)</span></p>
+</section>
+<section id="clustering-methods" class="level2" data-number="7.10">
+<h2 data-number="7.10" class="anchored" data-anchor-id="clustering-methods"><span class="header-section-number">7.10</span> Clustering methods</h2>
+<p>dbscan package</p>
+<ul>
+<li>Called “density-based”, but “density” here does not mean probability density, as in ch6. Instead, it refers to the relative concentration of points in a neighbourhood.</li>
+<li></li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Arya1998" class="csl-entry" role="listitem">
+Arya, S, D M Mount, N S Netanyahu, R Silverman, and A Y Wu. 1998. <span>“An Optimal Algorithm for Approximate Nearest Neighbor Searching Fixed Dimensions.”</span> <em>Journal of the ACM</em> 45 (6): 891–923. <a href="https://doi.org/10.1145/293347.293348">https://doi.org/10.1145/293347.293348</a>.
+</div>
+<div id="ref-Bentley1975" class="csl-entry" role="listitem">
+Bentley, J L. 1975. <span>“Multidimensional Binary Search Trees Used for Associative Searching.”</span> <em>Communications of the ACM</em> 18 (9): 509–17. <a href="https://doi.org/10.1145/361002.361007">https://doi.org/10.1145/361002.361007</a>.
+</div>
+<div id="ref-Billor2000" class="csl-entry" role="listitem">
+Billor, N, A S Hadi, and P F Velleman. 2000. <span>“<span>BACON</span>: Blocked Adaptive Computationally Efficient Outlier Nominators.”</span> <em>Computational Statistics &amp; Data Analysis</em> 34 (3): 279–98. <a href="https://doi.org/10.1016/S0167-9473(99)00101-2">https://doi.org/10.1016/S0167-9473(99)00101-2</a>.
+</div>
+<div id="ref-Borg2005" class="csl-entry" role="listitem">
+Borg, I, and P J F Groenen. 2005. <em>Modern Multidimensional Scaling: Theory and Applications</em>. 2nd ed. Springer Texts in Statistics. New York: Springer. <a href="https://doi.org/10.1007/0-387-28981-X">https://doi.org/10.1007/0-387-28981-X</a>.
+</div>
+<div id="ref-lof" class="csl-entry" role="listitem">
+Breunig, M M, H-P Kriegel, R T Ng, and J Sander. 2000. <span>“LOF: Identifying Density-Based Local Outliers.”</span> <em>ACM SIGMOD Record</em> 29 (2): 93–104. <a href="https://doi.org/10.1145/335191.335388">https://doi.org/10.1145/335191.335388</a>.
+</div>
+<div id="ref-Brys2005-pc" class="csl-entry" role="listitem">
+Brys, G, M Hubert, and P J Rousseeuw. 2005. <span>“A Robustification of Independent Component Analysis.”</span> <em>Journal of Chemometrics</em> 19 (5-7): 364–75. <a href="https://doi.org/10.1002/cem.940">https://doi.org/10.1002/cem.940</a>.
+</div>
+<div id="ref-Donoho81" class="csl-entry" role="listitem">
+Donoho, D L. 1982. <span>“Breakdown Properties of Multivariate Location Estimators.”</span>
+</div>
+<div id="ref-knn" class="csl-entry" role="listitem">
+Fix, E, and J L Hodges. 1989. <span>“Discriminatory Analysis — Nonparametric Discrimination: Consistency Properties.”</span> <em>International Statistical Review</em> 57 (3): 238–47.
+</div>
+<div id="ref-Liu2008-dp" class="csl-entry" role="listitem">
+Liu, F T, K M Ting, and Z-H Zhou. 2008. <span>“Isolation Forest.”</span> In <em>2008 Eighth <span>IEEE</span> International Conference on Data Mining</em>, 413–22. IEEE. <a href="https://doi.org/10.1109/ICDM.2008.17">https://doi.org/10.1109/ICDM.2008.17</a>.
+</div>
+<div id="ref-Rousseeuw2016-wm" class="csl-entry" role="listitem">
+Rousseeuw, P J, and W Van den Bossche. 2016. <span>“Detecting Deviating Data Cells,”</span> January. <a href="http://arxiv.org/abs/1601.07251">http://arxiv.org/abs/1601.07251</a>.
+</div>
+<div id="ref-Rousseeuw1999-jt" class="csl-entry" role="listitem">
+Rousseeuw, P J, and K Van Driessen. 1999. <span>“A Fast Algorithm for the Minimum Covariance Determinant Estimator.”</span> <em>Technometrics: A Journal of Statistics for the Physical, Chemical, and Engineering Sciences</em> 41 (3): 212–23. <a href="https://doi.org/10.1080/00401706.1999.10485670">https://doi.org/10.1080/00401706.1999.10485670</a>.
+</div>
+<div id="ref-Stahel81" class="csl-entry" role="listitem">
+Stahel, W A. 1981. <span>“Robust Estimation: Infinitisimal Optimality and Covariance Matrix Estimators.”</span> PhD, ETH Zurich.
+</div>
+<div id="ref-Talagala2019-zv" class="csl-entry" role="listitem">
+Talagala, P D, R J Hyndman, and K Smith-Miles. 2019. <span>“Anomaly Detection in High Dimensional Data.”</span> <em>arXiv Preprint arXiv</em>. <a href="https://arxiv.org/abs/1908.04000">https://arxiv.org/abs/1908.04000</a>.
+</div>
+<div id="ref-Wilkinson2017-rb" class="csl-entry" role="listitem">
+Wilkinson, L. 2017. <span>“Visualizing Big Data Outliers Through Distributed Aggregation.”</span> <em>IEEE Transactions on Visualization and Computer Graphics</em>, August. <a href="https://doi.org/10.1109/TVCG.2017.2744685">https://doi.org/10.1109/TVCG.2017.2744685</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/OTexts\.com\/weird");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./06-density.html" class="pagination-link" aria-label="Density-based methods">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./08-highdim.html" class="pagination-link" aria-label="High-dimensional methods">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Published by OTexts using <a href="https://quarto.org">Quarto</a>. <i class="fa-solid fa-copyright" aria-label="copyright"></i> <a href="https://robjhyndman.com">Rob J Hyndman</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

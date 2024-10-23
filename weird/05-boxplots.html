@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5&nbsp; Boxplots – That's weird! Anomaly&nbsp;detection using&nbsp;R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./06-density.html" rel="next">
+<link href="./04-tests.html" rel="prev">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05-boxplots.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">That’s weird! Anomaly&nbsp;detection using&nbsp;R</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-univariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-multivariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-boxplots.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-density.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-distance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-functional.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-network.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Network and graph data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-imagevideo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image and video data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-text.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Categorical and textual data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Spaces of probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-cybersecurity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Network intrusions and fraud</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bibliography</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix algebra</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title"><b>Sections</b></h2>
+   
+  <ul>
+  <li><a href="#univariate-data-depth" id="toc-univariate-data-depth" class="nav-link active" data-scroll-target="#univariate-data-depth"><span class="header-section-number">5.1</span> Univariate data depth</a></li>
+  <li><a href="#tukeys-boxplots" id="toc-tukeys-boxplots" class="nav-link" data-scroll-target="#tukeys-boxplots"><span class="header-section-number">5.2</span> Tukey’s boxplots</a></li>
+  <li><a href="#modified-iqr-boxplots" id="toc-modified-iqr-boxplots" class="nav-link" data-scroll-target="#modified-iqr-boxplots"><span class="header-section-number">5.3</span> Modified IQR boxplots</a></li>
+  <li><a href="#letter-value-plots" id="toc-letter-value-plots" class="nav-link" data-scroll-target="#letter-value-plots"><span class="header-section-number">5.4</span> Letter value plots</a></li>
+  <li><a href="#sec-depth" id="toc-sec-depth" class="nav-link" data-scroll-target="#sec-depth"><span class="header-section-number">5.5</span> Multivariate data depth</a>
+  <ul class="collapse">
+  <li><a href="#tukey-depth" id="toc-tukey-depth" class="nav-link" data-scroll-target="#tukey-depth">Tukey depth</a></li>
+  <li><a href="#depth-median" id="toc-depth-median" class="nav-link" data-scroll-target="#depth-median">Depth median</a></li>
+  </ul></li>
+  <li><a href="#bagplots" id="toc-bagplots" class="nav-link" data-scroll-target="#bagplots"><span class="header-section-number">5.6</span> Bagplots</a>
+  <ul class="collapse">
+  <li><a href="#old-faithful-bagplot" id="toc-old-faithful-bagplot" class="nav-link" data-scroll-target="#old-faithful-bagplot">Old faithful bagplot</a></li>
+  <li><a href="#general-comments" id="toc-general-comments" class="nav-link" data-scroll-target="#general-comments">General comments</a></li>
+  </ul></li>
+  <li><a href="#hdr-boxplots" id="toc-hdr-boxplots" class="nav-link" data-scroll-target="#hdr-boxplots"><span class="header-section-number">5.7</span> HDR boxplots</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">5.8</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-27933797-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-27933797-2');
+  gtag('config', 'G-JKBLG3XQGY')
+</script>
+<link href="https://fonts.googleapis.com/css?family=Fira+Sans|Noto+Serif" rel="stylesheet">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack-subset.css">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-boxplots" class="quarto-section-identifier"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Most readers will have first come across anomaly detection using boxplots. In this chapter, we will describe the original boxplot method, along with some variations that have been developed to address some of the limitations of the original approach.</p>
+<section id="univariate-data-depth" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="univariate-data-depth"><span class="header-section-number">5.1</span> Univariate data depth</h2>
+<p>For univariate data, the <strong>depth</strong> of an observation is a measure of how deeply buried it is when all observations are ordered. That is, how far would you need to count from either the smallest or largest observation until you encountered the observation of interest. So the minimum and maximum both have depth 1, while the sample median has the largest depth of <span class="math inline">(n+1)/2</span>.</p>
+<p>The other sample quantiles as defined in <a href="02-univariate.html#sec-sample-quantiles" class="quarto-xref"><span>Section 2.4</span></a> do not correspond exactly to specific depths, but <span class="citation" data-cites="Tukey1977-xd">Tukey (<a href="references.html#ref-Tukey1977-xd" role="doc-biblioref">1977</a>)</span> introduced variations for some quantiles that are based on depths. He called these “letter values”.</p>
+<p><strong>Letter values</strong> <span class="citation" data-cites="Tukey1977-xd hoaglin1983letter">(<a href="references.html#ref-Tukey1977-xd" role="doc-biblioref">Tukey 1977</a>; <a href="references.html#ref-hoaglin1983letter" role="doc-biblioref">Hoaglin 1983</a>)</span> are order statistics with specific depths, defined recursively starting with the median. The depth of the median is <span class="math inline">d_1 = (1+n)/2</span>. The depths of successive letter values are defined recursively as <span class="math inline">d_i = (1+\lfloor d_{i-1}\rfloor)/2</span>, <span class="math inline">i=2,3,\dots</span>. The corresponding letter values are defined as <span class="math display">
+  L_i = y_{(\lfloor d_i\rfloor)}
+  \qquad\text{and}\qquad
+  U_i = y_{(\lfloor n-d_i+1\rfloor)}
+</span> when the depth is an integer. Otherwise the depth is an integer plus 1/2, and the letter values are given by <span class="math display">
+  L_i = (y_{(\lfloor d_i\rfloor)} + y_{(\lfloor d_i\rfloor+1)})/2
+  \qquad\text{and}\qquad
+  U_i = (y_{(\lfloor n-d_i+1\rfloor)} + y_{(\lfloor n-d_i+1\rfloor+1)})/2 .
+</span> Rather than label these using integers (<span class="math inline">L_2,L_3,\dots</span>), Tukey proposed using letters (<span class="math inline">L_F,L_E,L_D,\dots</span>) where <span class="math inline">F=</span> fourths, <span class="math inline">E=</span> eighths, <span class="math inline">D=</span> sixteenths, and so on.</p>
+<p>Because each depth is roughly half the previous depth, the lower letter values provide estimates of the quantiles with probabilities <span class="math inline">p=\frac{1}{2},\frac14,\frac18,\dots</span>, while the upper letter values provide estimates of the quantiles with probabilities <span class="math inline">p=\frac{1}{2},\frac34,\frac78,\dots</span>. <span class="citation" data-cites="hoaglin1983letter">Hoaglin (<a href="references.html#ref-hoaglin1983letter" role="doc-biblioref">1983, p44</a>)</span>, showed that <span class="math inline">\hat{Q}(p)</span> with <code>type = 8</code> gives approximately the same result as the corresponding letter value.</p>
+<p>Consider the batting averages from <a href="02-univariate.html#sec-sample-quantiles" class="quarto-xref"><span>Section 2.4</span></a>. In this example, <span class="math inline">n = 1138</span>, so the depths of the first four letter values are given by <span class="math display">
+  d_1 = 569.5,\quad
+  d_2 = 285,\quad
+  d_3 = 143,\quad\text{and}\quad
+  d_4 = 72,
+</span> and the corresponding letter values are given by <span class="math display">\begin{align*}
+L_1 &amp;= U_1 = (y_{(569)}+ y_{(570)})/2 = 26.63 &amp;\\
+L_F &amp;= y_{(285)}  = 16.59 \qquad
+&amp;U_F &amp;= y_{(854)} = 36.71 \\
+L_E &amp;= y_{(143)} = 11.57 \qquad
+&amp;U_E &amp;= y_{(996)} = 43.28 \\
+L_D &amp;= y_{(72)}  = 8.29 \qquad
+&amp;U_D &amp;= y_{(1067)}  = 47.29
+\end{align*}</span> We can compute the letter values using the <code>lvtable()</code> function from the <code>lvplot</code> package.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>batave <span class="ot">&lt;-</span> cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Average)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>batave <span class="sc">|&gt;</span> lvplot<span class="sc">::</span><span class="fu">lvtable</span>(<span class="at">k =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;    depth     LV   2.5%  97.5%
+#&gt; Dl  72.0  8.286  7.524  8.727
+#&gt; El 143.0 11.568 10.698 11.948
+#&gt; Fl 285.0 16.591 15.583 17.697
+#&gt; M  569.5 26.631 25.732 27.921
+#&gt; Fu 285.0 36.714 35.662 37.649
+#&gt; Eu 143.0 43.278 42.421 44.214
+#&gt; Du  72.0 47.289 46.561 48.227</code></pre>
+</div>
+</div>
+<p>The output also provides 95% confidence intervals based on <a href="02-univariate.html#eq-sample-quantile-distribution" class="quarto-xref">Equation&nbsp;<span>2.2</span></a>. The estimates are similar, but not identical, to the quantiles calculated using the <code>quantile()</code> function.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>batave <span class="sc">|&gt;</span> <span class="fu">quantile</span>(<span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.5</span><span class="sc">^</span>(<span class="dv">4</span><span class="sc">:</span><span class="dv">1</span>), <span class="dv">1</span> <span class="sc">-</span> <span class="fl">0.5</span><span class="sc">^</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>)), <span class="at">type =</span> <span class="dv">8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;  6.25%  12.5%    25%    50%    75%  87.5% 93.75% 
+#&gt;  8.243 11.565 16.589 26.631 36.718 43.346 47.417</code></pre>
+</div>
+</div>
+</section>
+<section id="tukeys-boxplots" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="tukeys-boxplots"><span class="header-section-number">5.2</span> Tukey’s boxplots</h2>
+<p>Boxplots were invented by John Tukey as a quick summary of medium sized data sets <span class="citation" data-cites="Tukey75 Tukey1977-xd wickhamboxplots">(<a href="references.html#ref-Tukey75" role="doc-biblioref">Tukey 1975</a>, <a href="references.html#ref-Tukey1977-xd" role="doc-biblioref">1977</a>; <a href="references.html#ref-wickhamboxplots" role="doc-biblioref">Wickham and Stryjewski 2011</a>)</span>. They are widely used to identify anomalies, which are shown as separate points in the plot.</p>
+<p><a href="#fig-cricketbox" class="quarto-xref">Figure&nbsp;<span>5.1</span></a> shows a boxplot of the cricket batting average data.</p>
+<div class="cell" data-layout-align="center" data-depends="cricket_batting">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Average)) <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>() <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>, <span class="at">x =</span> <span class="st">"Career batting average"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-cricketbox" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cricketbox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-cricketbox-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cricketbox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.1: Career batting averages for all men and women to have played test cricket and batted more than 20 times. The anomaly is Don Bradman, who averaged 99.94 over his career.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In the <code>ggplot2</code> version of the boxplot shown here, the middle line in the box shows the median, and the ends of the box are the quartiles computed using <code>type = 7</code>. The base R version is computed using the <code>boxplot()</code> function, which uses the fourths to delineate the box.</p>
+<p>Whichever variation is used, roughly half of all observations lie within the box. The width of the box is an estimate of the “interquartile range” (IQR). Any points more than 1.5 IQR outside the box are shown as anomalies and appear as separate points in the plot. The “whiskers” that extend out each side of the box show the range of the remaining points.</p>
+<p>Originally, Tukey proposed two levels of outliers — those more than 1.5 IQR beyond the box were labelled “outside” values, while those more than 3 IQR beyond the box were labelled “far out” values. Most software implementations of boxplots do not distinguish between these groups.</p>
+<p>In this cricket batting example, the boxplot works well because the data set is not too large or small, and the distribution of points other than the anomaly is unimodal.</p>
+<p>However, boxplots can be misleading, and are they are limited in at least two respects.</p>
+<ol type="1">
+<li>For large data sets, boxplots show too many points as anomalies, and it is hard to distinguish them.</li>
+<li>Boxplots assume that the distribution of the data is unimodal.</li>
+</ol>
+<p>To better understand the first problem, imagine if the data comprised <span class="math inline">n</span> observations from a standard Normal distribution N(0,1). <a href="#fig-normalboxplot" class="quarto-xref">Figure&nbsp;<span>5.2</span></a> shows an example with 10000 points.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">rnorm</span>(<span class="dv">10000</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>() <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-normalboxplot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-normalboxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-normalboxplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-normalboxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.2: Boxplot of 10000 draws from a standard Normal distribution.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Many anomalies are shown, but since all observations come from a simple distribution, none of them are actually anomalies. For this distribution, <span class="math inline">Q(0.25) = -0.674</span>, <span class="math inline">Q(0.75) = 0.674</span>, <span class="math inline">\text{IQR} = 1.349</span>, and so for a large sample size, the boxplot whiskers would be approximately <span class="math inline">-0.674 - 1.5\times 1.349 = -2.698</span> and <span class="math inline">0.674 + 1.5\times 1.349 = 2.698</span>. Any points outside the whiskers would be identified as “anomalous” by a boxplot and plotted as separate points. The probability of a standard normal observation being at least <span class="math inline">2.698</span> in absolute value is <span class="math inline">0.00349</span>. So with <span class="math inline">10000</span> observations, we would have about <span class="math inline">35</span> anomalies identified, none of which would be a genuine anomaly.</p>
+<p>The second problem is demonstrated using the Old Faithful eruption duration data, shown in <a href="01-intro.html#fig-oldfaithful1" class="quarto-xref">Figure&nbsp;<span>1.3</span></a>. As before, we will omit the largest value so we can see the details in the remaining data.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">6000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration)) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>() <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>, <span class="at">x =</span> <span class="st">"Duration (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-oldfaithful2a" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithful2a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-oldfaithful2a-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithful2a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.3: Boxplot of Old Faithful eruption durations since 2015, omitting the one eruption that lasted nearly two hours.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Quite a few anomalies are shown, including the one-second eruption we identified earlier. But the remaining “anomalies” are not particularly unusual observations. All the points below 180 seconds are identified as anomalies, even though we know that observations in the region between 100 and 140 are not unusual for this geyser. Because the boxplot does not allow for more than one mode, all the points in the second smaller cluster are identified as anomalies. The points around 300 seconds are also not really anomalies — these are just values in the upper tail of the distribution for eruptions.</p>
+</section>
+<section id="modified-iqr-boxplots" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="modified-iqr-boxplots"><span class="header-section-number">5.3</span> Modified IQR boxplots</h2>
+<p>Under Tukey’s boxplot approach to identifying outliers, a <strong>regular outlier</strong> is more than 1.5 IQR beyond the quartiles, while an <strong>extreme outlier</strong> is more than 3 IQR beyond the quartiles. For a Normal distribution, the probability of genuine observations lying beyond these thresholds is 0.0070 and 0.0000023 respectively, so for large sample sizes, many spurious anomalies will be identified. Even with 1000 observations, Tukey’s approach will find at least one spurious anomaly in a Normal distribution with probability 0.9991.</p>
+<p><span class="citation" data-cites="Barbato2011">Barbato et al. (<a href="references.html#ref-Barbato2011" role="doc-biblioref">2011</a>)</span> proposed a modification to the boxplot approach to identifying outliers, where the IQR in these thresholds is replaced with IQR<span class="math inline">[1+0.1\log(n/10)]</span>. This allows the limits to increase with the sample size, in a way that controls the probability of spurious anomalies. <a href="#fig-probanomaly" class="quarto-xref">Figure&nbsp;<span>5.4</span></a> shows the probability of identifying at least one spurious anomaly in a Normal distribution, using Tukey’s boxplot approach compared to those obtained using the modified IQR approach of <span class="citation" data-cites="Barbato2011">Barbato et al. (<a href="references.html#ref-Barbato2011" role="doc-biblioref">2011</a>)</span>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">n =</span> <span class="fu">exp</span>(<span class="fu">seq</span>(<span class="fu">log</span>(<span class="dv">3</span>), <span class="fu">log</span>(<span class="fl">1e6</span>), <span class="at">l =</span> <span class="dv">100</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">Tukey1 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">pnorm</span>(q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> iqr)),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Tukey2 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">pnorm</span>(q3 <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> iqr)),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Barbato1 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">pnorm</span>(q3 <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> iqr <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> <span class="fu">log</span>(n <span class="sc">/</span> <span class="dv">10</span>)))),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Barbato2 =</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">pnorm</span>(q3 <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> iqr <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> <span class="fu">log</span>(n <span class="sc">/</span> <span class="dv">10</span>))))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(Tukey1<span class="sc">:</span>Barbato2, <span class="at">names_to =</span> <span class="st">"method"</span>, <span class="at">values_to =</span> <span class="st">"probability"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">level =</span> stringr<span class="sc">::</span><span class="fu">str_extract</span>(method, <span class="st">"</span><span class="sc">\\</span><span class="st">d"</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">level =</span> <span class="fu">if_else</span>(level <span class="sc">==</span> <span class="st">"1"</span>, <span class="st">"Regular outlier"</span>, <span class="st">"Extreme outlier"</span>),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> stringr<span class="sc">::</span><span class="fu">str_extract</span>(method, <span class="st">"[A-Za-z]*"</span>),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">level =</span> <span class="fu">factor</span>(level, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Regular outlier"</span>, <span class="st">"Extreme outlier"</span>)),</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="fu">factor</span>(method, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Tukey"</span>, <span class="st">"Barbato"</span>)),</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">probability =</span> <span class="dv">1</span> <span class="sc">-</span> (<span class="dv">1</span> <span class="sc">-</span> probability)<span class="sc">^</span>n</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> n, <span class="at">y =</span> probability)) <span class="sc">+</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(level <span class="sc">~</span> method) <span class="sc">+</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Probability of at least one spurious anomaly"</span>, <span class="at">x =</span> <span class="st">"Sample size"</span>) <span class="sc">+</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>(</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="fl">2e6</span>),</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="dv">10</span><span class="sc">^</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">minor_breaks =</span> <span class="cn">NULL</span>,</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">format</span>(<span class="dv">10</span><span class="sc">^</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>), <span class="at">scientific =</span> <span class="cn">FALSE</span>, <span class="at">trim =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-probanomaly" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-probanomaly-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-probanomaly-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-probanomaly-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.4: Probability of at least one spurious anomaly identified in a Normal distribution, based on the boxplot approach of Tukey, and the modified IQR approach of <span class="citation" data-cites="Barbato2011">Barbato et al. (<a href="references.html#ref-Barbato2011" role="doc-biblioref">2011</a>)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Even with a huge sample size, the probability of identifying a spurious regular anomaly using this modified approach is less than 1/2, and it is almost impossible to identify a spurious extreme anomaly.</p>
+<p>Let’s apply this approach to the six examples we introduced in <a href="04-tests.html#sec-examples" class="quarto-xref"><span>Section 4.1</span></a>. First we will write a short function to implement the idea.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>barbato_anomaly <span class="ot">&lt;-</span> <span class="cf">function</span>(y, <span class="at">extreme =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">length</span>(y)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  q1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(y, <span class="fl">0.25</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  q3 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(y, <span class="fl">0.75</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  threshold <span class="ot">&lt;-</span> (<span class="fl">1.5</span> <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> extreme) <span class="sc">*</span> (q3 <span class="sc">-</span> q1) <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">log</span>(n <span class="sc">/</span> <span class="dv">10</span>))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y <span class="sc">&gt;</span> q3 <span class="sc">+</span> threshold <span class="sc">|</span> y <span class="sc">&lt;</span> q1 <span class="sc">-</span> threshold)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">barbato_anomaly</span>(Average))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 15
+#&gt; # ℹ 15 variables: Player &lt;chr&gt;, Country &lt;chr&gt;, Start &lt;int&gt;, End &lt;int&gt;,
+#&gt; #   Matches &lt;int&gt;, Innings &lt;int&gt;, NotOuts &lt;int&gt;, Runs &lt;int&gt;, HighScore &lt;dbl&gt;,
+#&gt; #   HighScoreNotOut &lt;lgl&gt;, Average &lt;dbl&gt;, Hundreds &lt;int&gt;, Fifties &lt;int&gt;,
+#&gt; #   Ducks &lt;int&gt;, Gender &lt;chr&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">barbato_anomaly</span>(duration))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 3
+#&gt;   time                duration waiting
+#&gt;   &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1 2015-12-07 00:09:00     7200    3420</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>n01b <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">c</span>(n01<span class="sc">$</span>v2[<span class="dv">1</span><span class="sc">:</span><span class="dv">18</span>], <span class="dv">4</span>, <span class="fl">4.5</span>))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>n01b <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">barbato_anomaly</span>(y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 1
+#&gt; # ℹ 1 variable: y &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>n01 <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">barbato_anomaly</span>(v1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 10
+#&gt; # ℹ 10 variables: v1 &lt;dbl&gt;, v2 &lt;dbl&gt;, v3 &lt;dbl&gt;, v4 &lt;dbl&gt;, v5 &lt;dbl&gt;, v6 &lt;dbl&gt;,
+#&gt; #   v7 &lt;dbl&gt;, v8 &lt;dbl&gt;, v9 &lt;dbl&gt;, v10 &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>t3 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">rt</span>(<span class="dv">1000</span>, <span class="at">df =</span> <span class="dv">3</span>))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>t3 <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">barbato_anomaly</span>(y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 1
+#&gt; # ℹ 1 variable: y &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>chisq4 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">rchisq</span>(<span class="dv">1000</span>, <span class="at">df =</span> <span class="dv">4</span>))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>chisq4 <span class="sc">|&gt;</span> <span class="fu">filter</span>(<span class="fu">barbato_anomaly</span>(y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 1
+#&gt; # ℹ 1 variable: y &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<ul>
+<li>It misses the anomalies in the cricket batting data, and in the <code>n01b</code> data set.</li>
+<li>Only the extreme outlier in the duration data is identified as an anomaly.</li>
+</ul>
+<p>In summary, while the modified IQR approach is an improvement on the original boxplot approach, it is not particularly good at finding genuine anomalies in data.</p>
+</section>
+<section id="letter-value-plots" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="letter-value-plots"><span class="header-section-number">5.4</span> Letter value plots</h2>
+<p>The problem that boxplots have with large data sets was also addressed by <span class="citation" data-cites="Hofmann2017-hz">Hofmann, Wickham, and Kafadar (<a href="references.html#ref-Hofmann2017-hz" role="doc-biblioref">2017</a>)</span> who introduced “letter-value” plots, a variation of boxplots that replace the whiskers with a variable number of letter values. In these plots, each pair of letter values marks the boundaries of a box. The box bounded by the fourths is the same as the box of a boxplot; the additional boxes extend to successive letter values until the quantiles corresponding to the letter values can no longer be estimated sufficiently accurately from the available data.</p>
+<p>These can be produced using the <code>lvplot</code> package.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lvplot)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">y =</span> Average)) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_lv</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">after_stat</span>(LV))) <span class="sc">+</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>() <span class="sc">+</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">"Career batting average"</span>) <span class="sc">+</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.key.height =</span> <span class="fu">unit</span>(.<span class="dv">2</span>, <span class="st">"cm"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-cricketboxlv" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cricketboxlv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-cricketboxlv-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cricketboxlv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.5: Letter value plot of career batting averages for all men and women who played test cricket and batter more than 20 times.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Here the median is given by M, the fourths by F, and so on. The middle box (F) is bounded by the fourths and contains all but 2/4 of the data; the next box (E) is bounded by the eighths and contains all but 2/8 of the data; then D is bounded by the sixteenths and contains all but 2/16 of the data; and so on.</p>
+<p>In this example, the most extreme box (labelled Z) is bounded by the points that fall within the 1/256 letter values. So it contains all but 2/256 of the data, and shows <span class="math inline">2 / 256 \times 1138 = 9</span> points as anomalies.</p>
+<p>The stopping rule used in the letter value plot is to show the boxes up to letter value <span class="math inline">k</span>, where <span class="math display">
+  0.5\sqrt{2d_k} z_{1-\alpha/2} &gt; d_{k+1}
+</span> and <span class="math inline">z_{1-\alpha/2}</span> is the <span class="math inline">1-\alpha/2</span> quantile of a standard Normal distribution. This choice is based on the idea that the edges of the boxes are quantile estimates, and the confidence interval for each quantile estimate that is displayed should not overlap the subsequent quantile estimate. The Normal distribution arises because the quantile estimate has an approximate Normal distribution (<a href="02-univariate.html#eq-sample-quantile-distribution" class="quarto-xref">Equation&nbsp;<span>2.2</span></a>). This stopping rule means that, on average, there should be fewer than <span class="math inline">2z^2_{1-\alpha/2}</span> legitimate observations in the tails. By default, <span class="math inline">\alpha=0.05</span>, so that, on average, there should be fewer than <span class="math inline">2 \times (1.96)^2 = 7.7</span> legitimate observations in the tails, regardless of the size of the data set.</p>
+<p>Letter value plots were not designed to detect anomalies, but to be a useful data visualization tool for univariate distributions with large numbers of observations. So the display of legitimate observations in the tails of the distribution is by design, not a flaw.</p>
+<p>In this cricketing example, it looks like there is one true anomaly (Don Bradman) and the remaining 8 observations displayed directly are simply in the tails of the distribution of the remaining data.</p>
+<p>When applied to the remaining examples, we see approximately 10–20 observations shown as individual points in each case.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">y =</span> duration)) <span class="sc">+</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_lv</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">after_stat</span>(LV))) <span class="sc">+</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>() <span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">"Eruption durations (seconds)"</span>) <span class="sc">+</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.key.height =</span> <span class="fu">unit</span>(.<span class="dv">2</span>, <span class="st">"cm"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-lvplots1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lvplots1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-lvplots1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lvplots1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.6: Letter value plot of Old Faithful eruption durations, omitting the long 2 hour duration.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>n01 <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">y =</span> v1)) <span class="sc">+</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_lv</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">after_stat</span>(LV))) <span class="sc">+</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>() <span class="sc">+</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.key.height =</span> <span class="fu">unit</span>(.<span class="dv">2</span>, <span class="st">"cm"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-lvplots2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lvplots2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-lvplots2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lvplots2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.7: Letter value plot of 1000 N(0,1) observations.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>n01b <span class="sc">|&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_lv</span>(<span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">after_stat</span>(LV))) <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>() <span class="sc">+</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-lvplots3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lvplots3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-lvplots3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lvplots3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.8: Letter value plot of 19 N(0,1) observations with an anomaly at 4.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In this last example, because there are only 20 observations, there is not enough data to estimate the quantiles beyond the fourths. So only the middle box is shown.</p>
+</section>
+<section id="sec-depth" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="sec-depth"><span class="header-section-number">5.5</span> Multivariate data depth</h2>
+<p>For multivariate data, there is no unique natural ordering of observations by size, so the concept of depth has to be thought about differently. It is still a measure of how centrally a point is located in a data set, but we need to think about what “central” means when there are multiple variables.</p>
+<p>There are numerous ways to define depth for multivariate data, nicely summarised in <span class="citation" data-cites="Liu1999">Liu, Parelius, and Singh (<a href="references.html#ref-Liu1999" role="doc-biblioref">1999</a>)</span>. Here, we will consider the two simplest approaches.</p>
+<section id="tukey-depth" class="level3">
+<h3 class="anchored" data-anchor-id="tukey-depth">Tukey depth</h3>
+<p>The first approach to this problem was (again) due to John Tukey <span class="citation" data-cites="Tukey75">(<a href="references.html#ref-Tukey75" role="doc-biblioref">Tukey 1975</a>)</span> who defined the depth of a point <span class="math inline">\bm{z}</span> in a data set <span class="math inline">\{\bm{y}_1,\dots,\bm{y}_n\}</span> as the smallest number of <span class="math inline">\bm{y}_i</span> contained in any halfspace that contains <span class="math inline">\bm{z}</span>. This is often called the “Tukey depth” of the point. (The point <span class="math inline">\bm{z}</span> does not have to be one of the observations.)</p>
+<p>For bivariate data, a half space is either of the two parts formed by splitting the plane with a straight line. A diagram will help illustrate the idea. Suppose we have the observations shown in <a href="#fig-tukeydepth" class="quarto-xref">Figure&nbsp;<span>5.9</span></a>. These are the first 10 observations from the first two variables of <code>n01</code>. The red line divides the plane into two sections which are called “half spaces”. We are interested in the depth of the orange point (which is not one of the observations).</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>n01 <span class="sc">|&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> v1, <span class="at">y =</span> v2)) <span class="sc">+</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="fu">aes</span>(<span class="at">intercept =</span> <span class="sc">-</span><span class="fl">0.8</span>, <span class="at">slope =</span> <span class="sc">-</span><span class="fl">1.8</span>), <span class="at">col =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(<span class="at">v1 =</span> <span class="dv">0</span>, <span class="at">v2 =</span> <span class="sc">-</span><span class="dv">1</span>), <span class="at">col =</span> discrete_colors[<span class="dv">1</span>]) <span class="sc">+</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.85</span>, <span class="fl">1.6</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.85</span>, <span class="fl">1.1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-tukeydepth" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tukeydepth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-tukeydepth-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tukeydepth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.9: A data set of 10 bivariate observations (shown in black). The dividing red line splits the plane into two halfspaces. We are interested in the depth of the orange point.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>There are an infinite number of ways of dividing the plane into half spaces, and the number of points in each half plane will vary depending on where the dividing line falls.</p>
+<p>To find the depth of the orange point, we need to find the line which divides the plane into two sections where the half containing the orange point includes as few observations as possible. In fact, the red line is one such solution which has the orange point in a halfspace containing only 2 observations There are no dividing lines that would put the orange point in a halfspace on its own. So it has a Tukey depth of 2.</p>
+<p>The depth region <span class="math inline">D_k</span> is the set of all points <span class="math inline">\bm{z}</span> with Tukey depth at least <span class="math inline">k</span>. These form a series of nested convex hulls where <span class="math inline">D_{k+1} \subseteq D_k</span>. The depth regions for our example are shown in <a href="#fig-depthregions" class="quarto-xref">Figure&nbsp;<span>5.10</span></a>. The blue region is depth 1, the orange region is depth 2, the pink region is depth 3, and the green region is depth 4.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>median <span class="ot">&lt;-</span> aplpack<span class="sc">::</span><span class="fu">compute.bagplot</span>(n01[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> tidyr<span class="sc">::</span><span class="fu">expand_grid</span>(<span class="at">v1 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">0.9</span>, <span class="fl">1.6</span>, <span class="at">l =</span> <span class="dv">200</span>), <span class="at">v2 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">1.95</span>, <span class="fl">1.15</span>, <span class="at">l =</span> <span class="dv">200</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(n01[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>z<span class="sc">$</span>depth <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">as.numeric</span>(DepthProc<span class="sc">::</span><span class="fu">depthTukey</span>(<span class="fu">as.matrix</span>(z), <span class="fu">as.matrix</span>(n01[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]))) <span class="sc">*</span> <span class="dv">10</span>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>regions <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>depths <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(z<span class="sc">$</span>depth))</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>depths <span class="ot">&lt;-</span> depths[depths <span class="sc">&gt;</span> <span class="dv">0</span>]</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> depths) {</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  tmp <span class="ot">&lt;-</span> z <span class="sc">|&gt;</span> <span class="fu">filter</span>(depth <span class="sc">==</span> depths[i])</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  hull <span class="ot">&lt;-</span> <span class="fu">chull</span>(tmp)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  regions[[i]] <span class="ot">&lt;-</span> tmp[<span class="fu">c</span>(hull, hull[<span class="dv">1</span>]), ]</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>cols <span class="ot">&lt;-</span> discrete_colors[<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">3</span>)]</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> n01 <span class="sc">|&gt;</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> v1, <span class="at">y =</span> v2))</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> depths) {</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">geom_polygon</span>(<span class="fu">aes</span>(<span class="at">x =</span> v1, <span class="at">y =</span> v2), <span class="at">data =</span> regions[[i]], <span class="at">fill =</span> cols[i], <span class="at">alpha =</span> <span class="fl">0.8</span>)</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>p <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.85</span>, <span class="fl">1.6</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.85</span>, <span class="fl">1.1</span>)) <span class="sc">+</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">data.frame</span>(<span class="at">v1 =</span> median<span class="sc">$</span>center[<span class="dv">1</span>], <span class="at">v2 =</span> median<span class="sc">$</span>center[<span class="dv">2</span>]),</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"yellow"</span>, <span class="at">size =</span> <span class="dv">2</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-depthregions" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-depthregions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-depthregions-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-depthregions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.10: The depth regions for the 10 bivariate observations from <a href="#fig-tukeydepth" class="quarto-xref">Figure&nbsp;<span>5.9</span></a>. The depth median is shown as the yellow point in the centre. The 10 observations are shown in black. These lie at the outer edges of the depth regions.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="depth-median" class="level3">
+<h3 class="anchored" data-anchor-id="depth-median">Depth median</h3>
+<p>A simple way to define a multivariate median is the “centre of gravity” of all points of maximum depth <span class="citation" data-cites="bivariatemedian">(<a href="references.html#ref-bivariatemedian" role="doc-biblioref">Rousseeuw and Ruts 1998</a>)</span>. The <strong>centre of gravity</strong> (or “centroid”) of a shape is the average of all points within the shape. If the shape is convex, it is the point where the shape could be perfectly balanced on the tip of a pin if it were made of a uniform material. For example, the centre of gravity of a rectangle is the point in the middle of the rectangle, and the centre of gravity of a circle is the centre of the circle.</p>
+<p>In <a href="#fig-depthregions" class="quarto-xref">Figure&nbsp;<span>5.10</span></a>, the points of maximum depth are shown in the central green region. The centre of gravity of this region is the yellow point in the middle.</p>
+<!-- ### Convex hull peeling depths -->
+<!-- Imagine that each of the observations shown in @fig-tukeydepth is a nail hammered into a board and we are looking at it from above. An elastic band wrapped around all observations will form a "convex hull" as shown on the left of @fig-convexhull. -->
+<!-- ```{r} -->
+<!-- #| label: fig-convexhull -->
+<!-- #| fig-cap: "Left: The convex hull containing the 10 bivariate observations from @fig-tukeydepth. Right: The second convex layer formed with the same points." -->
+<!-- hull <- chull(n01[1:10, 1:2]) -->
+<!-- hull <- c(hull, hull[1]) -->
+<!-- df <- n01[1:10, 1:2] |> -->
+<!--   mutate(hull = row_number() %in% hull) -->
+<!-- p1 <- df |> -->
+<!--   ggplot(aes(x = v1, y = v2)) + -->
+<!--   geom_point() + -->
+<!--   geom_path(data = n01[hull, 1:2], col = "red") + -->
+<!--   coord_fixed(xlim = c(-0.85, 1.6), ylim = c(-1.85, 1.1)) -->
+<!-- hull2 <- chull(df[!df$hull, 1:2]) -->
+<!-- hull2 <- c(hull2, hull2[1]) -->
+<!-- p2 <- df |> -->
+<!--   ggplot(aes(x = v1, y = v2, col = hull)) + -->
+<!--   geom_point() + -->
+<!--   scale_color_manual(values = c(`TRUE` = "gray", `FALSE` = "black")) + -->
+<!--   geom_path(data = (df[!df$hull, ])[hull2, ], col = "red") + -->
+<!--   guides(col = "none") + -->
+<!--   coord_fixed(xlim = c(-0.85, 1.6), ylim = c(-1.85, 1.1)) -->
+<!-- patchwork::wrap_plots(p1, p2, nrow = 1) -->
+<!-- ``` -->
+<!-- This is the first convex layer. If the points on the perimeter are removed, and the convex hull of the remaining points is constructed, we obtain the second convex layer, shown on the right of @fig-convexhull. The third convex layer will consist of the one remaining point that is within the second convex hull. -->
+<!-- The "convex hull peeling depth" [@barnett1976ordering] is the level of the convex layer that an observation belongs to. In this data set, points have convex hull peeling depths of 1, 2 or 3. -->
+</section>
+</section>
+<section id="bagplots" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="bagplots"><span class="header-section-number">5.6</span> Bagplots</h2>
+<p>The bagplot was proposed by <span class="citation" data-cites="bagplot">Rousseeuw, Ruts, and Tukey (<a href="references.html#ref-bagplot" role="doc-biblioref">1999</a>)</span> as a bivariate version of a boxplot, constructed using similar principles. Like a univariate boxplot, the bivariate bagplot has a central point (the depth median), an inner region (the “bag”), and an outer region (the “loop”), beyond which outliers are shown as individual points.</p>
+<p>To define the bag, we first find the smallest depth region <span class="math inline">D_k</span> containing at least <span class="math inline">\lfloor n/2 \rfloor</span> of the observations. Then the bag is linearly interpolated between <span class="math inline">D_k</span> and <span class="math inline">D_{k-1}</span>, with the linear interpolation depending on the number of observations in each depth region. Because the bag is interpolated between depth regions, it is also a convex polygon. The procedure is slightly more complicated for small data sets where only <span class="math inline">D_1</span> might contain more than half of the observations.</p>
+<p>To find the loop, we inflate the bag relative to the median by a factor of 3. This forms the “fence”. Then the loop is the convex hull of the points contained within the fence.</p>
+<p><a href="#fig-bagplot" class="quarto-xref">Figure&nbsp;<span>5.11</span></a> shows the bagplot from the same 10 observations as were used in the illustration of depth in the previous section, along with the observations themselves shown in black.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>n01 <span class="sc">|&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_bagplot</span>(v1, v2) <span class="sc">+</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> v1, <span class="at">y =</span> v2), <span class="at">data =</span> n01[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-bagplot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bagplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-bagplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bagplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.11: A bagplot of the 10 bivariate observations from <a href="#fig-tukeydepth" class="quarto-xref">Figure&nbsp;<span>5.9</span></a>. The depth median is shown as the blue point in the centre. The darker shaded region is the bag, while the lighter shaded region shows the loop. There are no outliers outside the loop for this data set.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="old-faithful-bagplot" class="level3">
+<h3 class="anchored" data-anchor-id="old-faithful-bagplot">Old faithful bagplot</h3>
+<p>A more interesting example is obtained in <a href="#fig-oldfaithfulbagplot" class="quarto-xref">Figure&nbsp;<span>5.12</span></a>, showing a bagplot of the durations and waiting times of Old Faithful eruptions.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7200</span>, waiting <span class="sc">&lt;</span> <span class="dv">7200</span>) <span class="sc">|&gt;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_bagplot</span>(duration, waiting) <span class="sc">+</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>, <span class="at">y =</span> <span class="st">"Waiting time (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-oldfaithfulbagplot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithfulbagplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-oldfaithfulbagplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithfulbagplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.12: Bagplot of the durations and waiting times of Old Faithful eruptions since 2015.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This demonstrates the drawback of using a bagplot to identify anomalies. The plot has identified all the shorter duration eruptions as anomalous, along with a small number of other eruptions.</p>
+<p>A useful variation of the bagplot, especially for larger data sets, displays a scatterplot of the observations, but colored using the same colors as the bagplot, with the deepest observation in the strongest blue, the points within the bag in a lighter blue, and the points within the loop in the lightest color. Outliers are shown in black if any exist.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7200</span>, waiting <span class="sc">&lt;</span> <span class="dv">7200</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_bagplot</span>(duration, waiting, <span class="at">scatterplot =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>, <span class="at">y =</span> <span class="st">"Waiting time (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-oldfaithfulbagplot2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithfulbagplot2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-oldfaithfulbagplot2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithfulbagplot2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.13: Bagplot of the durations and waiting times of Old Faithful eruptions since 2015.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><a href="#fig-oldfaithfulbagplot2" class="quarto-xref">Figure&nbsp;<span>5.13</span></a> shows the value of this version of a bagplot, as you can see a lot of detail in the bag and loop that would not be visible otherwise.</p>
+</section>
+<section id="general-comments" class="level3">
+<h3 class="anchored" data-anchor-id="general-comments">General comments</h3>
+<p>The idea of depth regions and the depth median can be easily generalized to data with more than two dimensions <span class="citation" data-cites="rousseeuw1998computing">(<a href="references.html#ref-rousseeuw1998computing" role="doc-biblioref">Rousseeuw and Struyf 1998</a>)</span>. Consequently, it would be possible to define a higher-dimensional version of the bagplot, although it would be difficult to plot it in four or more dimensions. In any case, we will consider approaches to handle high-dimensional data in <a href="08-highdim.html" class="quarto-xref">Chapter&nbsp;<span>8</span></a>.</p>
+</section>
+</section>
+<section id="hdr-boxplots" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="hdr-boxplots"><span class="header-section-number">5.7</span> HDR boxplots</h2>
+<p>We can compute HDRs from a kernel density estimate to find regions of the sample space where observations are unlikely to occur.</p>
+<p>Let’s illustrate the idea with univariate data. In <a href="02-univariate.html#sec-kde" class="quarto-xref"><span>Section 2.7</span></a>, we estimated the density of the duration of Old Faithful eruptions using a kernel density estimate, and plotted it in <a href="02-univariate.html#fig-oldfaithful4" class="quarto-xref">Figure&nbsp;<span>2.16</span></a>. We can find the 50% and 99% HDRs of this density, which can then be used to form an “HDR boxplot” <span class="citation" data-cites="HDR96">(<a href="references.html#ref-HDR96" role="doc-biblioref">Hyndman 1996</a>)</span> as shown in <a href="#fig-hdr-faithful" class="quarto-xref">Figure&nbsp;<span>5.14</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>of <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dist_kde</span>(of<span class="sc">$</span>duration, <span class="at">multiplier =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_density</span>(<span class="at">hdr =</span> <span class="st">"fill"</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.99</span>), </span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">show_points =</span> <span class="cn">TRUE</span>, <span class="at">jitter =</span> <span class="cn">TRUE</span>, <span class="at">show_mode =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span> <span class="fu">xlim</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">320</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-hdr-faithful" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hdr-faithful-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-hdr-faithful-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hdr-faithful-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.14: Kernel density estimate of the duration of Old Faithful eruptions since 2015. Below the density estimate is shown an HDR boxplot of the same data, with the 50% and 99% highest density regions shown as shaded regions, and observations outside the 99% region shown as individual points.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The HDR shown here can also be produced using the <code>gg_hdrboxplot()</code> function.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span> <span class="fu">gg_hdrboxplot</span>(duration, <span class="at">show_anomalies =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>) <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">320</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-of-hdrboxplot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-of-hdrboxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-of-hdrboxplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-of-hdrboxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.15: HDR boxplot of the duration of Old Faithful eruptions since 2015.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Points outside the 99% region are shown separately and jittered vertically to reduce overplotting. This type of boxplot has the advantage that it allows for multimodal distributions, and can identify “inliers” that occur in regions of low density between regions of high density.</p>
+<p>Of course, by definition, 1% of points will lie outside the 99% region, so the points shown are not necessarily anomalies, just observations that occur in the lower probability regions of the space. By setting <code>show_anomalies = TRUE</code>, some of the points are highlighted as potential anomalies, using the method described in <a href="06-density.html#sec-kdescores" class="quarto-xref"><span>Section 6.4</span></a>.</p>
+<p>The idea naturally extends to higher dimensions. <a href="#fig-hdr-faithful2" class="quarto-xref">Figure&nbsp;<span>5.16</span></a> shows the bivariate HDR boxplot of the duration and waiting times for the Old Faithful data. Here we have filtered out very long durations and waiting times first.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>of2 <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>, waiting <span class="sc">&lt;</span> <span class="dv">7000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(duration, waiting)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>of2 <span class="sc">|&gt;</span> <span class="fu">gg_hdrboxplot</span>(duration, waiting, <span class="at">show_anomalies =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>, <span class="at">y =</span> <span class="st">"Waiting time (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-hdr-faithful2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hdr-faithful2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-hdr-faithful2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hdr-faithful2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.16: Bivariate kernel density estimate of the duration and waiting times of Old Faithful eruptions since 2015, excluding durations and waiting times longer than 2 hours.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>There are 2189 observations used to compute this density estimate, and even with that many observations, computing the 99% HDR contour is difficult, as shown by the rather jagged boundary of the HDR region. This is simply a consequence of the sparsity of points in multidimensional space and in the tails of a distribution.</p>
+<p>As with bagplots, there is a variation that shows the individual points colored according to the HDR region in which they fall.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>of2 <span class="sc">|&gt;</span> <span class="fu">gg_hdrboxplot</span>(duration, waiting, <span class="at">show_anomalies =</span> <span class="cn">FALSE</span>, <span class="at">scatterplot =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Duration (seconds)"</span>, <span class="at">y =</span> <span class="st">"Waiting time (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-hdr-faithful3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hdr-faithful3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="05-boxplots_files/figure-html/fig-hdr-faithful3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hdr-faithful3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.17: Bivariate HDR boxplot of the duration and waiting times of Old Faithful eruptions since 2015, excluding durations and waiting times longer than 2 hours. Individual points are colored according to the HDR region in which they fall.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="summary" class="level2" data-number="5.8">
+<h2 data-number="5.8" class="anchored" data-anchor-id="summary"><span class="header-section-number">5.8</span> Summary</h2>
+<p>Boxplots, letter value plots, bagplots, and HDR boxplots are all extremely useful tools in exploratory data analysis, and deserve to be widely applied. They are particularly useful in summarising univariate and bivariate data distributions. However, as we have seen, none of them are effective at anomaly detection, and only HDR boxplots allow for data with multiple modes.</p>
+<p>Nevertheless, we will find these tools useful when summarising results from anomaly detection algorithms, and in understanding why some points have been labelled as anomalies.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Barbato2011" class="csl-entry" role="listitem">
+Barbato, G, E M Barini, G Genta, and R Levi. 2011. <span>“Features and Performance of Some Outlier Detection Methods.”</span> <em>Journal of Applied Statistics</em>, no. 922191616: 1–17. <a href="https://doi.org/10.1080/02664763.2010.545119">https://doi.org/10.1080/02664763.2010.545119</a>.
+</div>
+<div id="ref-hoaglin1983letter" class="csl-entry" role="listitem">
+Hoaglin, D C. 1983. <span>“Letter Values: A Set of Selected Order Statistics.”</span> In <em>Understanding Robust and Exploratory Data Analysis</em>, edited by David C Hoaglin and Frederick Mosteller, 33–57. New York: John Wiley.
+</div>
+<div id="ref-Hofmann2017-hz" class="csl-entry" role="listitem">
+Hofmann, H, H Wickham, and K Kafadar. 2017. <span>“<span>Letter-Value</span> Plots: Boxplots for Large Data.”</span> <em>Journal of Computational &amp; Ggraphical Statistics</em> 26 (3): 469–77. <a href="https://doi.org/10.1080/10618600.2017.1305277">https://doi.org/10.1080/10618600.2017.1305277</a>.
+</div>
+<div id="ref-HDR96" class="csl-entry" role="listitem">
+Hyndman, R J. 1996. <span>“Computing and Graphing Highest Density Regions.”</span> <em>The American Statistician</em> 50 (2): 120–26. <a href="http://www.jstor.org/stable/2684423">http://www.jstor.org/stable/2684423</a>.
+</div>
+<div id="ref-Liu1999" class="csl-entry" role="listitem">
+Liu, R Y, J M Parelius, and K Singh. 1999. <span>“Multivariate Analysis by Data Depth: Descriptive Statistics, Graphics and Inference.”</span> <em>The Annals of Statistics</em> 27 (3): 783–858. <a href="https://doi.org/10.1214/aos/1018031260">https://doi.org/10.1214/aos/1018031260</a>.
+</div>
+<div id="ref-bivariatemedian" class="csl-entry" role="listitem">
+Rousseeuw, P J, and I Ruts. 1998. <span>“Constructing the Bivariate <span>Tukey</span> Median.”</span> <em>Statistica Sinica</em> 8: 827–39.
+</div>
+<div id="ref-bagplot" class="csl-entry" role="listitem">
+Rousseeuw, P J, I Ruts, and J W Tukey. 1999. <span>“The Bagplot: A Bivariate Boxplot.”</span> <em>The American Statistician</em> 52 (4): 382–87.
+</div>
+<div id="ref-rousseeuw1998computing" class="csl-entry" role="listitem">
+Rousseeuw, P J, and A Struyf. 1998. <span>“Computing Location Depth and Regression Depth in Higher Dimensions.”</span> <em>Statistics and Computing</em> 8 (3): 193–203.
+</div>
+<div id="ref-Tukey75" class="csl-entry" role="listitem">
+Tukey, J W. 1975. <span>“Mathematics and the Picturing of Data.”</span> In <em>Proceedings of the International Congress of Mathematicians</em>, 2:523–31.
+</div>
+<div id="ref-Tukey1977-xd" class="csl-entry" role="listitem">
+———. 1977. <em>Exploratory Data Analysis</em>. Addison-Wesley.
+</div>
+<div id="ref-wickhamboxplots" class="csl-entry" role="listitem">
+Wickham, H, and L Stryjewski. 2011. <span>“40 Years of Boxplots.”</span> <a href="https://vita.had.co.nz/papers/boxplots.html">https://vita.had.co.nz/papers/boxplots.html</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/OTexts\.com\/weird");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./04-tests.html" class="pagination-link" aria-label="Statistical tests">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./06-density.html" class="pagination-link" aria-label="Density-based methods">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Published by OTexts using <a href="https://quarto.org">Quarto</a>. <i class="fa-solid fa-copyright" aria-label="copyright"></i> <a href="https://robjhyndman.com">Rob J Hyndman</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

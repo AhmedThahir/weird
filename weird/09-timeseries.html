@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>9&nbsp; Time series data – That's weird! Anomaly&nbsp;detection using&nbsp;R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./10-functional.html" rel="next">
+<link href="./08-highdim.html" rel="prev">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./09-timeseries.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">That’s weird! Anomaly&nbsp;detection using&nbsp;R</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-univariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-multivariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-boxplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-density.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-distance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-timeseries.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-functional.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-network.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Network and graph data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-imagevideo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image and video data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-text.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Categorical and textual data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Spaces of probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-cybersecurity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Network intrusions and fraud</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bibliography</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix algebra</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title"><b>Sections</b></h2>
+   
+  <ul>
+  <li><a href="#time-series-anomaly-detection-paradigms" id="toc-time-series-anomaly-detection-paradigms" class="nav-link active" data-scroll-target="#time-series-anomaly-detection-paradigms"><span class="header-section-number">9.1</span> Time series anomaly detection paradigms</a></li>
+  <li><a href="#weird-times" id="toc-weird-times" class="nav-link" data-scroll-target="#weird-times"><span class="header-section-number">9.2</span> Weird times</a>
+  <ul class="collapse">
+  <li><a href="#hampel-identifier" id="toc-hampel-identifier" class="nav-link" data-scroll-target="#hampel-identifier">Hampel identifier</a></li>
+  <li><a href="#surprisal-anomalies" id="toc-surprisal-anomalies" class="nav-link" data-scroll-target="#surprisal-anomalies">Surprisal anomalies</a></li>
+  <li><a href="#multivariate-time-series" id="toc-multivariate-time-series" class="nav-link" data-scroll-target="#multivariate-time-series">Multivariate time series</a></li>
+  </ul></li>
+  <li><a href="#weird-series" id="toc-weird-series" class="nav-link" data-scroll-target="#weird-series"><span class="header-section-number">9.3</span> Weird series</a></li>
+  <li><a href="#surveillance" id="toc-surveillance" class="nav-link" data-scroll-target="#surveillance"><span class="header-section-number">9.4</span> Surveillance</a></li>
+  <li><a href="#somewhere" id="toc-somewhere" class="nav-link" data-scroll-target="#somewhere"><span class="header-section-number">9.5</span> Somewhere</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-27933797-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-27933797-2');
+  gtag('config', 'G-JKBLG3XQGY')
+</script>
+<link href="https://fonts.googleapis.com/css?family=Fira+Sans|Noto+Serif" rel="stylesheet">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack-subset.css">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-noneuclidean" class="quarto-section-identifier"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>For this chapter, we will load some additional packages designed to work with time series data. To learn more about these packages and their use in time series analysis, see <span class="citation" data-cites="fpp3">Hyndman and Athanasopoulos (<a href="references.html#ref-fpp3" role="doc-biblioref">2021</a>)</span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tsibble)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fable)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(feasts)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tsibbledata)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="time-series-anomaly-detection-paradigms" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="time-series-anomaly-detection-paradigms"><span class="header-section-number">9.1</span> Time series anomaly detection paradigms</h2>
+<p>Time series data are observations that are collected over time. In this book, we will only consider time series that are observed at regular intervals, such as annually, monthly, or hourly.</p>
+<p>When considering time series data, we can distinguish between three different anomaly detection paradigms:</p>
+<ol type="1">
+<li><strong>Weird times</strong>: Identifying anomalies within a time series in historical data.</li>
+<li><strong>Weird series</strong>: Identifying an anomalous time series within a collection of time series.</li>
+<li><strong>Surveillance</strong>: Identifying anomalies within a time series in real time</li>
+</ol>
+<p>These can be illustrated using the following examples.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-tsparadigms" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tsparadigms-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="09-timeseries_files/figure-html/fig-tsparadigms-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tsparadigms-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.1: The three main anomaly detection paradigms. In the top panel, we aim to identify unusual observations within historical data. In the middle panel, we aim to identify an unusual time series within a collection of time series. In the bottom panel, we aim to identify an unusual observation in the next time period.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Weird times</strong>: In the top plot, we are looking for historical anomalies within time series data. This is common in quality control, or in data cleaning. The aim is to find time periods where the observations are different from the rest of the data. Again, it can easily be extended to multivariate time series, where we look for time periods when one or more of the series may display unusual observations.</p>
+<p><strong>Weird series</strong>: In the middle plot, we are looking for an anomalous time series within a collection of time series. The observations within each series may all be consistent, but the series as a whole may be unusual. This is, by its nature, a multivariate problem. It is common in finance, where we look for unusual behaviour of a stock within a collection of stocks, or in health, where we look for unusual behaviour of a patient within a collection of patients.</p>
+<p><strong>Surveillance</strong>: In the bottom plot, we are looking for an anomaly in the next observation in the time series. This is commonly done in surveillance, when a time is monitored in real time to identify an unusual observation, and appropriate action taken. An anomaly in this context, is an observation that is very different from what was forecast. Although only a single time series is shown in this plot, the idea easily extends to multivariate time series, where we look for something unusual occurring in the next time period across a set of time series.</p>
+<p>We will discuss each of these paradigms in turn.</p>
+</section>
+<section id="weird-times" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="weird-times"><span class="header-section-number">9.2</span> Weird times</h2>
+<p>As a vehicle of illustration, we will consider French mortality rates, disaggregated by age and sex. These are obtained from the <span class="citation" data-cites="HMD">Human Mortality Database (<a href="references.html#ref-HMD" role="doc-biblioref">2024</a>)</span>. We will consider male and female data from 1816 to 1999 over ages 0 to 85, giving 172 separate time series, each of length 184. In fact, the top plot in <a href="#fig-tsparadigms" class="quarto-xref">Figure&nbsp;<span>9.1</span></a> shows the male mortality rates for 25 year olds over this time period.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fr_mortality</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 31,648 × 4
+#&gt;     Year   Age Sex    Mortality
+#&gt;    &lt;int&gt; &lt;int&gt; &lt;chr&gt;      &lt;dbl&gt;
+#&gt;  1  1816     0 Female   0.187  
+#&gt;  2  1816     1 Female   0.0467 
+#&gt;  3  1816     2 Female   0.0339 
+#&gt;  4  1816     3 Female   0.0229 
+#&gt;  5  1816     4 Female   0.0160 
+#&gt;  6  1816     5 Female   0.0138 
+#&gt;  7  1816     6 Female   0.0121 
+#&gt;  8  1816     7 Female   0.0104 
+#&gt;  9  1816     8 Female   0.00891
+#&gt; 10  1816     9 Female   0.00760
+#&gt; # ℹ 31,638 more rows</code></pre>
+</div>
+</div>
+<p><a href="#fig-fr_mortality_time_plots" class="quarto-xref">Figure&nbsp;<span>9.2</span></a> shows the data for both sexes and all ages. The mortality rates have improved over time for all ages, especially since 1950. Infant mortality (age 0) is much higher than the rest of childhood, with mortality rates at a minimum at about age 10 in all years. The highest mortality rates are for the oldest age groups. The effect of the two wars are particularly evident in the male mortality rates.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fr_mortality <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Mortality, <span class="at">color =</span> Age, <span class="at">group =</span> Age)) <span class="sc">+</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(. <span class="sc">~</span> Sex) <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-fr_mortality_time_plots" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fr_mortality_time_plots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="09-timeseries_files/figure-html/fig-fr_mortality_time_plots-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fr_mortality_time_plots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.2: French mortality rates by sex and age from 1816 to 1999. We use a log scale because the rates are vastly different for different age groups.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Anomaly detection methods for identifying weird time anomalies are usually based on fitting a smooth function <span class="math inline">m_t</span> through the observations, estimating the spread in the series <span class="math inline">s_t</span>, and computing the standardized residuals <span class="math inline">e_t = (y_t - m_t)/s_t</span>. We then identify anomalies in the <span class="math inline">e_t</span> series using one of the methods discussed in <a href="06-density.html" class="quarto-xref"><span>Chapter 6</span></a> or <a href="07-distance.html" class="quarto-xref"><span>Chapter 7</span></a>. To illustrate, we will consider two such approaches, but many more are possible depending on how <span class="math inline">m_t</span> and <span class="math inline">s_t</span> are estimated, and how anomalies are identified in <span class="math inline">e_t</span>.</p>
+<section id="hampel-identifier" class="level3">
+<h3 class="anchored" data-anchor-id="hampel-identifier">Hampel identifier</h3>
+<p>The Hampel identifier is due to a proposal of Frank Hampel <span class="citation" data-cites="Davies1993">(<a href="references.html#ref-Davies1993" role="doc-biblioref">Davies and Gather 1993</a>)</span>, and is designed to identify anomalies in a time series based on whether an observation is very different from the neighbouring observations. Suppose we define neighbourhoods comprising observations within <span class="math inline">h</span> time periods. Then the local median is given by <span class="math display">
+\hat{m}_t = \text{median}(y_{t-h}, \dots, y_{t+h}).
+</span> This is also called a “moving median”, a “running median” or a “rolling median”. Similarly, the local median absolute deviation (MAD) is given by <span class="math display">
+\hat{s}_t = \text{median}(|y_{t-h}-\hat{m}_t|, \dots, |y_{t+h}- \hat{m}_t|).
+</span> This measures the variation of the series in the neighbourhood of time <span class="math inline">t</span>. The residuals <span class="math inline">e_t = (y_t-\hat{m}_t)/s_t</span> provide a measure for how different an observation <span class="math inline">y_t</span> is from its neighbours. The Hampel identifier denotes an observation as an anomaly if <span class="math display">|e_t| &gt; \tau</span> for some threshold <span class="math inline">\tau</span>. A related idea is the Hampel filter, where each anomaly is replaced by the local median <span class="math inline">\hat{m}_t</span>.</p>
+<p>The threshold is often set under the assumption of a Normal distribution, for which the MAD is equal to 0.67445 times the standard deviation. So it is common to set <span class="math inline">\tau = k/0.67445</span> where <span class="math inline">k</span> is the number of standard deviations permitted before an observation is considered an outlier. Because we apply the rule repeatedly over the length of a time series, we need to be careful of the problem of multiple comparisons, where the probability of a false positive overall is much larger than the probability of a false positive for each individual test. However, it is not straightforward to adjust the probabilities because the tests are not independent, and the dependency between them depends on the window size <span class="math inline">h</span>, and the characteristics of the time series. Setting <span class="math inline">k=5</span> or 6 seems to work quite well for many problems.</p>
+<p>The <code>hampel_anomalies()</code> function implements this algorithm. The code below applies the algorithm to all 172 time series in <code>fr_mortality</code>.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fr_anomalies <span class="ot">&lt;-</span> fr_mortality <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Age, Sex) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">hampel =</span> <span class="fu">hampel_anomalies</span>(Mortality, <span class="at">bandwidth =</span> <span class="dv">7</span>, <span class="at">k =</span> <span class="dv">6</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(hampel) <span class="sc">|&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(Year, Age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find years containing anomalies</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>yrs <span class="ot">&lt;-</span> fr_anomalies <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Year, Sex) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>fr_anomalies_plot_male2 <span class="ot">&lt;-</span> fr_anomalies <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Sex <span class="sc">==</span> <span class="st">"Male"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Age)) <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(. <span class="sc">~</span> Sex) <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1820</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">20</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">range</span>(yrs<span class="sc">$</span>Year)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="fu">unique</span>(yrs<span class="sc">$</span>Year[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Male"</span>]),</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"grey"</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">col =</span> <span class="st">"#478cb2"</span>) <span class="sc">+</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> yrs <span class="sc">|&gt;</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(Sex <span class="sc">==</span> <span class="st">"Male"</span>, <span class="sc">!</span>Year <span class="sc">%in%</span> <span class="dv">1915</span><span class="sc">:</span><span class="dv">1918</span>),</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> <span class="dv">75</span>, <span class="at">label =</span> Year), <span class="at">col =</span> <span class="st">"#478cb2"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">seed =</span> <span class="dv">1967</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">4</span>, <span class="dv">85</span>)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>fr_anomalies_plot_female2 <span class="ot">&lt;-</span> fr_anomalies <span class="sc">|&gt;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Sex <span class="sc">==</span> <span class="st">"Female"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Age)) <span class="sc">+</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(. <span class="sc">~</span> Sex) <span class="sc">+</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1820</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">20</span>),</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">range</span>(yrs<span class="sc">$</span>Year)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="fu">unique</span>(yrs<span class="sc">$</span>Year[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Female"</span>]),</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"grey"</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"French mortality anomalies"</span>) <span class="sc">+</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">col =</span> <span class="st">"#c1653a"</span>) <span class="sc">+</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> yrs[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Female"</span>, ],</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> <span class="dv">75</span>, <span class="at">label =</span> Year), <span class="at">col =</span> <span class="st">"#c1653a"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">seed =</span> <span class="dv">1967</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">4</span>, <span class="dv">85</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  fr_anomalies_plot_female2,</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  fr_anomalies_plot_male2,</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrow =</span> <span class="dv">1</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-hampel_fr" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-hampel_fr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="09-timeseries_files/figure-html/fig-hampel_fr-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-hampel_fr-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.3: French mortality observations identified as anomalies using the Hampel identifier.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><a href="#fig-hampel_fr" class="quarto-xref">Figure&nbsp;<span>9.3</span></a> shows the observations that have been identified as anomalies, showing the wars and epidemics that have occurred over time. The following events in French history are evident in the data:</p>
+<ul>
+<li>1832, 1849, 1854: Cholera outbreaks</li>
+<li>1853-1856: Crimean war</li>
+<li>1870: Franco-Prussian war</li>
+<li>1871: Repression of the ‘Commune de Paris’</li>
+<li>1914-1918: World War I</li>
+<li>1918: Spanish flu outbreak</li>
+<li>1940-1944: World War II</li>
+</ul>
+</section>
+<section id="surprisal-anomalies" class="level3">
+<h3 class="anchored" data-anchor-id="surprisal-anomalies">Surprisal anomalies</h3>
+<p>The Hampel identifier worked well for the annual mortality series, but the local median approach will break down when there is seasonality or other systematic patterns in the data. However, the same idea can be adapted by replacing the local median with a more sophisticated way of modelling the signal in the data. One such method is STL (Seasonal Trend decomposition using Loess) due to <span class="citation" data-cites="Cleveland1990">Cleveland et al. (<a href="references.html#ref-Cleveland1990" role="doc-biblioref">1990</a>)</span>, and extended by <span class="citation" data-cites="mstl">Bandara, Hyndman, and Bergmeir (<a href="references.html#ref-mstl" role="doc-biblioref">2022</a>)</span> to handle multiple seasonal periods or series with no seasonality. In the latter case, Friedman’s SuperSmoother <span class="citation" data-cites="supsmu">(<a href="references.html#ref-supsmu" role="doc-biblioref">Friedman 1984</a>)</span> is used to estimate the signal <span class="math inline">m_t</span>. This uses local linear regressions rather than local medians, with the window width chosen by cross-validation. Other estimates of <span class="math inline">m_t</span> are also possible, provided they are robust to outliers.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fr_fit <span class="ot">&lt;-</span> fr_mortality <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> Year, <span class="at">key =</span> <span class="fu">c</span>(Age, Sex)) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="at">stl =</span> <span class="fu">STL</span>(Mortality)) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">augment</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>.model, <span class="sc">-</span>.innov)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>fr_fit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 31,648 × 6
+#&gt;      Age Sex     Year Mortality .fitted   .resid
+#&gt;    &lt;int&gt; &lt;chr&gt;  &lt;int&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+#&gt;  1     0 Female  1816     0.187   0.192 -0.00503
+#&gt;  2     0 Female  1817     0.182   0.191 -0.00958
+#&gt;  3     0 Female  1818     0.186   0.191 -0.00488
+#&gt;  4     0 Female  1819     0.197   0.190  0.00691
+#&gt;  5     0 Female  1820     0.181   0.189 -0.00826
+#&gt;  6     0 Female  1821     0.182   0.188 -0.00662
+#&gt;  7     0 Female  1822     0.207   0.188  0.0196 
+#&gt;  8     0 Female  1823     0.192   0.187  0.00521
+#&gt;  9     0 Female  1824     0.199   0.186  0.0124 
+#&gt; 10     0 Female  1825     0.194   0.185  0.00909
+#&gt; # ℹ 31,638 more rows</code></pre>
+</div>
+</div>
+<p>The <code>.fitted</code> column contains the estimates of <span class="math inline">m_t</span>, while the <code>.resid</code> column contains the differences <span class="math inline">y_t - \hat{m}_t</span>. We will estimate <span class="math inline">s_t</span> using a robust estimate of standard deviation across each series (rather than locally, as was done with the Hampel method). This time, we will use IQR, rather than MAD, to estimate the spread, with a similar adjustment so that it is equivalent to a standard deviation if they data were normally distributed.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>fr_sd <span class="ot">&lt;-</span> fr_fit <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Age, Sex) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">s =</span> <span class="fu">IQR</span>(.resid) <span class="sc">/</span> <span class="fl">1.349</span>, <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>fr_scores <span class="ot">&lt;-</span> fr_fit <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(fr_sd, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"Sex"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">e =</span> .resid <span class="sc">/</span> s)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>fr_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 31,648 × 8
+#&gt;      Age Sex     Year Mortality .fitted   .resid       s      e
+#&gt;    &lt;int&gt; &lt;chr&gt;  &lt;int&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1     0 Female  1816     0.187   0.192 -0.00503 0.00786 -0.640
+#&gt;  2     0 Female  1817     0.182   0.191 -0.00958 0.00786 -1.22 
+#&gt;  3     0 Female  1818     0.186   0.191 -0.00488 0.00786 -0.621
+#&gt;  4     0 Female  1819     0.197   0.190  0.00691 0.00786  0.879
+#&gt;  5     0 Female  1820     0.181   0.189 -0.00826 0.00786 -1.05 
+#&gt;  6     0 Female  1821     0.182   0.188 -0.00662 0.00786 -0.843
+#&gt;  7     0 Female  1822     0.207   0.188  0.0196  0.00786  2.49 
+#&gt;  8     0 Female  1823     0.192   0.187  0.00521 0.00786  0.663
+#&gt;  9     0 Female  1824     0.199   0.186  0.0124  0.00786  1.58 
+#&gt; 10     0 Female  1825     0.194   0.185  0.00909 0.00786  1.16 
+#&gt; # ℹ 31,638 more rows</code></pre>
+</div>
+</div>
+<p>At this point, we could identify a point as an anomaly if it is more than k standard deviations away from <span class="math inline">m_t</span>, as was done with the Hampel identifier. This is also the approach taken by the <code>tsoutliers</code> function from the <code>forecast</code> package, which uses 3 IQR as the threshold, equivalent to <span class="math inline">k=4.05</span> standard deviations. But we will use density scores instead, and compute the corresponding surprisal probabilities assuming the residuals follow a Normal distribution.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fr_scores <span class="ot">&lt;-</span> fr_scores <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">s =</span> <span class="sc">-</span><span class="fu">dnorm</span>(e, <span class="at">log =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">prob =</span> <span class="fu">surprisals</span>(s)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>fr_scores <span class="sc">|&gt;</span> <span class="fu">arrange</span>(prob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 31,648 × 9
+#&gt;      Age Sex     Year Mortality .fitted   .resid     s      e     prob
+#&gt;    &lt;int&gt; &lt;chr&gt;  &lt;int&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
+#&gt;  1     0 Female  1816     0.187   0.192 -0.00503  1.12 -0.640 0.000100
+#&gt;  2     0 Female  1817     0.182   0.191 -0.00958  1.66 -1.22  0.000100
+#&gt;  3     0 Female  1818     0.186   0.191 -0.00488  1.11 -0.621 0.000100
+#&gt;  4     0 Female  1819     0.197   0.190  0.00691  1.31  0.879 0.000100
+#&gt;  5     0 Female  1820     0.181   0.189 -0.00826  1.47 -1.05  0.000100
+#&gt;  6     0 Female  1821     0.182   0.188 -0.00662  1.27 -0.843 0.000100
+#&gt;  7     0 Female  1822     0.207   0.188  0.0196   4.02  2.49  0.000100
+#&gt;  8     0 Female  1823     0.192   0.187  0.00521  1.14  0.663 0.000100
+#&gt;  9     0 Female  1824     0.199   0.186  0.0124   2.17  1.58  0.000100
+#&gt; 10     0 Female  1825     0.194   0.185  0.00909  1.59  1.16  0.000100
+#&gt; # ℹ 31,638 more rows</code></pre>
+</div>
+</div>
+<p>The most extreme anomalies all correspond to male deaths due to World War I. A plot similar to <a href="#fig-hampel_fr" class="quarto-xref">Figure&nbsp;<span>9.3</span></a> can be made, showing points with lookout probability less than 0.05. Fewer anomalies have been identified than with the Hampel identifier. Because the lookout probabilities were based on a Generalized Pareto Distribution with a threshold of 90%, and we are identifying anomalies with probability less than 0.05, the overall probability of a false positive is 0.005 per series, so it is unlikely that we have identified any false positives, and likely that we have missed some anomalies.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fr_anomalies <span class="ot">&lt;-</span> fr_scores <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Year, Sex, Age) <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">|&gt;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(fr_mortality, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"Sex"</span>, <span class="st">"Year"</span>))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>yrs <span class="ot">&lt;-</span> fr_anomalies <span class="sc">|&gt;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Year, Sex) <span class="sc">|&gt;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>fr_anomalies_plot_male2 <span class="ot">&lt;-</span> fr_anomalies <span class="sc">|&gt;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Sex <span class="sc">==</span> <span class="st">"Male"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Age)) <span class="sc">+</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(. <span class="sc">~</span> Sex) <span class="sc">+</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1820</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">20</span>),</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">range</span>(yrs<span class="sc">$</span>Year)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="fu">unique</span>(yrs<span class="sc">$</span>Year[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Male"</span>]),</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"grey"</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">col =</span> <span class="st">"#478cb2"</span>) <span class="sc">+</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> yrs[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Male"</span>, ],</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> <span class="dv">75</span>, <span class="at">label =</span> Year), <span class="at">col =</span> <span class="st">"#478cb2"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">seed =</span> <span class="dv">1967</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">4</span>, <span class="dv">85</span>)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>fr_anomalies_plot_female2 <span class="ot">&lt;-</span> fr_anomalies <span class="sc">|&gt;</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Sex <span class="sc">==</span> <span class="st">"Female"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Age)) <span class="sc">+</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(. <span class="sc">~</span> Sex) <span class="sc">+</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">1820</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">20</span>),</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">range</span>(yrs<span class="sc">$</span>Year)</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="fu">unique</span>(yrs<span class="sc">$</span>Year[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Female"</span>]),</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"grey"</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"French mortality anomalies"</span>) <span class="sc">+</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">col =</span> <span class="st">"#c1653a"</span>) <span class="sc">+</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> yrs[yrs<span class="sc">$</span>Sex <span class="sc">==</span> <span class="st">"Female"</span>, ],</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> <span class="dv">75</span>, <span class="at">label =</span> Year), <span class="at">col =</span> <span class="st">"#c1653a"</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">seed =</span> <span class="dv">1967</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">4</span>, <span class="dv">85</span>)</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>  fr_anomalies_plot_female2,</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>  fr_anomalies_plot_male2,</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrow =</span> <span class="dv">1</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-stl_anomalies" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-stl_anomalies-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="09-timeseries_files/figure-html/fig-stl_anomalies-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-stl_anomalies-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.4: French mortality observations identified as anomalies using density scores obtained from applying Friedman’s supersmoother to each series.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="multivariate-time-series" class="level3">
+<h3 class="anchored" data-anchor-id="multivariate-time-series">Multivariate time series</h3>
+<p>A similar can be applied to the whole collection of time series, where we are looking for years that are anomalous across all ages and both sexes. One way to do this is to first take principal components of the series, and then apply the preceding procedure to the series of first principal component scores.</p>
+<p>First we convert the series to logs as they are on vastly different scales, then we transform the data to wide form. Finally, we compute the first principal component of the resulting matrix.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to wide form</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>fr_wide <span class="ot">&lt;-</span> fr_mortality <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">logm =</span> <span class="fu">log</span>(Mortality)) <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">series =</span> <span class="fu">paste0</span>(<span class="fu">substr</span>(Sex, <span class="dv">1</span>, <span class="dv">1</span>), <span class="st">":"</span>, Age)) <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Age, <span class="sc">-</span>Sex, <span class="sc">-</span>Mortality) <span class="sc">|&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(<span class="at">names_from =</span> series, <span class="at">values_from =</span> logm)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute 1 principal component from mortality rates</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>pcs <span class="ot">&lt;-</span> fr_wide <span class="sc">|&gt;</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Year) <span class="sc">|&gt;</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prcomp</span>(<span class="at">rank =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>(fr_wide <span class="sc">|&gt;</span> <span class="fu">select</span>(Year))</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot principal component scores</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>pcs <span class="sc">|&gt;</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> .fittedPC1)) <span class="sc">+</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="09-timeseries_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we can apply an STL model to find anomalies in this series.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>pcs <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> Year) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="at">stl =</span> <span class="fu">STL</span>(.fittedPC1)) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">augment</span>() <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>.model, <span class="sc">-</span>.innov) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">e =</span> .resid <span class="sc">/</span> <span class="fu">IQR</span>(.resid) <span class="sc">*</span> <span class="fl">1.349</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">abs</span>(e) <span class="sc">&gt;</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tsibble: 12 x 5 [1Y]
+#&gt;     Year .fittedPC1 .fitted .resid      e
+#&gt;    &lt;int&gt;      &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1  1832    -11.9    -9.72   -2.16  -3.40
+#&gt;  2  1849    -11.8    -9.36   -2.46  -3.89
+#&gt;  3  1854    -11.7    -9.18   -2.52  -3.98
+#&gt;  4  1870    -11.1    -8.45   -2.64  -4.17
+#&gt;  5  1871    -14.6    -8.39   -6.21  -9.80
+#&gt;  6  1915     -7.88   -5.18   -2.70  -4.26
+#&gt;  7  1918    -11.4    -4.80   -6.57 -10.4 
+#&gt;  8  1940     -2.26    0.808  -3.06  -4.83
+#&gt;  9  1943     -2.49    1.89   -4.38  -6.91
+#&gt; 10  1944     -6.20    2.47   -8.67 -13.7 
+#&gt; 11  1945     -0.359   3.26   -3.62  -5.70
+#&gt; 12  1948      8.27    6.05    2.22   3.50</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="weird-series" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="weird-series"><span class="header-section-number">9.3</span> Weird series</h2>
+<p>Next we consider unusual series within a large collection of time series.</p>
+<p>To illustrate the ideas we will use a data set of monthly observations on the Australian Pharmaceutical Benefits Scheme (PBS), from July 1991 to June 2008. The PBS involves the Australian government subsidising certain pharmaceutical products, to allow more equitable access to essential medicines. The data set contains monthly sales volumes of those products being subsidised, classified according to the Anatomical Therapeutic Chemical (ATC) classification system.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Compute features (and omit series with missing features)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>PBS_feat <span class="ot">&lt;-</span> PBS <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">features</span>(Cost, <span class="fu">feature_set</span>(<span class="at">pkgs =</span> <span class="st">"feasts"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="st">`</span><span class="at">...26</span><span class="st">`</span>) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; Error in ar.burg.default(x, aic = aic, order.max = order.max, na.action = na.action,  : 
+#&gt;   zero-variance series
+#&gt; Error in ar.burg.default(x, aic = aic, order.max = order.max, na.action = na.action,  : 
+#&gt;   zero-variance series</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Compute principal components</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>PBS_prcomp <span class="ot">&lt;-</span> PBS_feat <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Concession, <span class="sc">-</span>Type, <span class="sc">-</span>ATC1, <span class="sc">-</span>ATC2) <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prcomp</span>(<span class="at">scale =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">augment</span>(PBS_feat)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Plot the first two components</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>PBS_prcomp <span class="sc">|&gt;</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .fittedPC1, <span class="at">y =</span> .fittedPC2)) <span class="sc">+</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="09-timeseries_files/figure-html/weirdseries-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Pull out most unusual series from first principal component</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>outliers <span class="ot">&lt;-</span> PBS_prcomp <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.fittedPC1 <span class="sc">&gt;</span> <span class="dv">6</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>outliers <span class="sc">|&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(ATC1, ATC2, Type, Concession)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 4 × 4
+#&gt;   ATC1  ATC2  Type        Concession  
+#&gt;   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;       
+#&gt; 1 J     J06   Safety net  Concessional
+#&gt; 2 C     C05   Co-payments General     
+#&gt; 3 S     S02   Co-payments General     
+#&gt; 4 S     S03   Co-payments General</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Visualise the unusual series</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>PBS <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">semi_join</span>(outliers, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Concession"</span>, <span class="st">"Type"</span>, <span class="st">"ATC1"</span>, <span class="st">"ATC2"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(Cost) <span class="sc">+</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(Concession, Type, ATC1, ATC2)) <span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Outlying time series in PC space"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="09-timeseries_files/figure-html/weirdseries-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>These series are either all zeros, or have a single non-zero observation.</p>
+</section>
+<section id="surveillance" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="surveillance"><span class="header-section-number">9.4</span> Surveillance</h2>
+<p>In surveillance, we are interested in identifying anomalies in real time. This is common in monitoring systems, where we want to identify unusual behaviour as soon as it occurs. For example, in a manufacturing plant, we may want to identify when a machine is not operating as expected, and take action to prevent further problems. In retail, we may want to identify when sales are unusually high or low, and adjust stock levels if necessary.</p>
+<p>Again, we will use the PBS data. For this example, we will combine the data into ATC level 2 groups, and look at total sales volumes (measured in thousands of scripts).</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>pbs <span class="ot">&lt;-</span> PBS <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(ATC2, Month) <span class="sc">|&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ATC2) <span class="sc">|&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Scripts =</span> <span class="fu">sum</span>(Scripts) <span class="sc">/</span> <span class="fl">1e3</span>, <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">t =</span> <span class="fu">as.numeric</span>(Month <span class="sc">-</span> <span class="fu">min</span>(Month) <span class="sc">+</span> <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>pbs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tsibble: 17,016 x 4 [1M]
+#&gt; # Key:       ATC2 [84]
+#&gt;    ATC2     Month Scripts     t
+#&gt;    &lt;chr&gt;    &lt;mth&gt;   &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 A01   1991 Jul    22.6     1
+#&gt;  2 A01   1991 Aug    20.4     2
+#&gt;  3 A01   1991 Sep    21.4     3
+#&gt;  4 A01   1991 Oct    23.7     4
+#&gt;  5 A01   1991 Nov    23.5     5
+#&gt;  6 A01   1991 Dec    26.3     6
+#&gt;  7 A01   1992 Jan    22.0     7
+#&gt;  8 A01   1992 Feb    16.4     8
+#&gt;  9 A01   1992 Mar    17.2     9
+#&gt; 10 A01   1992 Apr    18.8    10
+#&gt; # ℹ 17,006 more rows</code></pre>
+</div>
+</div>
+<p>The data set is a <code>tsibble</code> object, which is a special type of tibble designed for time series data. Two columns have special purposes: the <code>Month</code> column is the time index, defining when each observation was made; and the <code>ATC2</code> column is a key variable, defining the separate time series in the data set. This data set contains 84 separate time series, one for each <code>ATC2</code> value.</p>
+<p>Let’s first look at the time series for just one ATC group: A12 (Mineral supplements). In fact, this is the same series as was shown in the top panel of <a href="#fig-tsparadigms" class="quarto-xref">Figure&nbsp;<span>9.1</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>pbs <span class="sc">|&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ATC2 <span class="sc">==</span> <span class="st">"A12"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(Scripts) <span class="sc">+</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Scripts for ATC group A12 (Mineral supplements)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-a12" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-a12-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="09-timeseries_files/figure-html/fig-a12-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-a12-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.5: The monthly script volume for mineral supplements (ATC group A12) on the Australian PBS.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Here there has been a sudden drop in sales at the end of 2005, most likely because of some products no longer being eligible for subsidy. There can also be sudden jumps in sales when a new product becomes available, or a new class of drugs is added to the scheme.</p>
+<p>The goal of surveillance is to identify these anomalies as soon as they occur. We can do this by fitting a model to the data, and then comparing the observed values to the model’s forecasts. If the observed values are very different from the forecast, then we have an anomaly.</p>
+<p>Statistical forecasting models provide forecasts in the form of probability distributions. Let <span class="math inline">y_t</span> denote the observation of a time series at time <span class="math inline">t</span>. Then a forecast can be expressed as a conditional distribution <span class="math display">
+  f(y_{t+h} | y_1, \dots, y_{t}, \bm{x}_t),
+</span> where <span class="math inline">y_1,\dots,y_t</span> denotes the observed history of the series, and <span class="math inline">\bm{x}_t</span> contains any other information available at time <span class="math inline">t</span> that is used in the model. The forecast “horizon” is given by <span class="math inline">h</span>, denoting the number of time periods into the future that we wish to forecast. Different forecasting methods use different conditioning information, and result in a different form of the forecast distribution. See <span class="citation" data-cites="fpp3">Hyndman and Athanasopoulos (<a href="references.html#ref-fpp3" role="doc-biblioref">2021</a>)</span> for a detailed discussion of forecasting methods.</p>
+<p>Once we observe the value of <span class="math inline">y_{t+h}</span>, we can calculate the corresponding density scores in the same way as we discussed in <a href="06-density.html#sec-lookout" class="quarto-xref"><span>Section 6.4.2</span></a>. Because we are interested in real-time surveillance, we need only consider the one-step-ahead forecast density, <span class="math inline">f(y_{t+1} | y_1, \dots, y_{t})</span>. We can then calculate the density score as <span class="math display">
+  s_{t+1} = -\log \hat{f}(y_{t+1} | y_1, \dots, y_{t}, \bm{x}_t).
+</span> This needs to be done iteratively for each time period, updating the model as new data becomes available. Since we need some observations with which to fit a model, we can’t begin the process at time <span class="math inline">t=1</span>. Instead, we’ll begin at time <span class="math inline">t=I</span>, where <span class="math inline">I</span> is the smallest number of observations with which we can reasonably estimate the time series model. The value of <span class="math inline">I</span> will depend on the complexity of the model being used. For simple models with few parameters, we may be able to set <span class="math inline">I</span> to around 20, but for complex models with many parameters, <span class="math inline">I</span> may need to be much larger.</p>
+<p>We also can’t estimate the Generalized Pareto Distribution until we have computed sufficient density scores. Fortunately, we are often working with many time series, not just one, and we can use the density scores from all series when computing the GPD. Suppose we have <span class="math inline">m</span> series we are monitoring, then at time <span class="math inline">t</span>, we will have computed <span class="math inline">m(t-I)</span> anomaly scores. Usually we would need at least a few hundred anomaly scores before we could reasonably estimate a GPD from the top 10% of the available scores. Suppose we required at least 200 scores, then we could only compute a GPD once <span class="math inline">t \ge J</span> where <span class="math inline">J = 200/m+I</span>.</p>
+<p>We can summarise the anomaly detection algorithm for surveillance as follows. First, we’ll change the notation slightly to allow for more than one series. Let <span class="math inline">y_{i,t}</span> denote the observation of the <span class="math inline">i</span>th series at time <span class="math inline">t</span>.</p>
+<p>For each <span class="math inline">t = I,I+1,\dots</span>, and for all series <span class="math inline">i=1,\dots,m</span>:</p>
+<ul>
+<li>Fit a time series model to the series <span class="math inline">y_{i,1},\dots,y_{i,t}</span>, and estimate the one-step forecast density, <span class="math inline">f_{i,t+1}(y \mid y_{i,1},\dots,y_{i,t}, \bm{x}_t)</span>.</li>
+<li>Compute the anomaly score: <span class="math inline">s_{i,t+1} = -\log\hat{f}_{i,t+1}(y_{i,t+1}\mid y_{i,1},\dots,y_{i,t}, \bm{x}_t)</span>.</li>
+<li>If <span class="math inline">t\ge J</span>, fit a Generalized Pareto Distribution <span class="math inline">S</span> to the top 10% of anomaly scores <span class="math inline">\{s_{i,t}\}</span>, <span class="math inline">i=1,\dots,m</span>, <span class="math inline">t=I+1,I+2,\dots,t</span>.</li>
+<li>Designate <span class="math inline">y_{i,t+1}</span> as an anomaly if <span class="math inline">P(S &gt; s_{i,t+1}) &lt; 0.05</span> under the GPD.</li>
+</ul>
+<p>To illustrate, let’s apply this to the <code>pbs</code> data. Starting with <span class="math inline">I=36</span> (3 years of data), we will fit ETS models to all available series <span class="citation" data-cites="fpp3">(Ch 8, <a href="references.html#ref-fpp3" role="doc-biblioref">Hyndman and Athanasopoulos 2021</a>)</span>, and forecast one step ahead in each case. Then we repeat the exercise using 37 observations, then 38 observations, and so on. This is known as a “rolling origin forecast” because the forecast rolls forward by one period each iteration. The process can be illustrated as in <a href="#fig-tscvplots" class="quarto-xref">Figure&nbsp;<span>9.6</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-tscvplots" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tscvplots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="09-timeseries_files/figure-html/fig-tscvplots-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tscvplots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.6: Rolling origin forecasts, with the training sets expanding by one observation at each iteration, and one-step forecasts computed for each training set.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Let’s step through the process for the first iteration, with <span class="math inline">t=36</span>. We fit ETS models to each of the time series, with the specific ETS model selected according to the characteristics of the series. See <span class="citation" data-cites="fpp3">(Ch8, <a href="references.html#ref-fpp3" role="doc-biblioref">Hyndman and Athanasopoulos 2021</a>)</span> for details of how this is done.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>pbs_fit <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(t <span class="sc">&lt;=</span> <span class="dv">36</span>) <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="at">ets =</span> <span class="fu">ETS</span>(Scripts))</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>pbs_fit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A mable: 83 x 2
+#&gt; # Key:     ATC2 [83]
+#&gt;    ATC2           ets
+#&gt;    &lt;chr&gt;      &lt;model&gt;
+#&gt;  1 A01   &lt;ETS(M,N,A)&gt;
+#&gt;  2 A02   &lt;ETS(M,A,M)&gt;
+#&gt;  3 A03   &lt;ETS(M,A,M)&gt;
+#&gt;  4 A04   &lt;ETS(M,N,A)&gt;
+#&gt;  5 A06   &lt;ETS(M,A,M)&gt;
+#&gt;  6 A07   &lt;ETS(M,N,M)&gt;
+#&gt;  7 A09   &lt;ETS(M,A,M)&gt;
+#&gt;  8 A10   &lt;ETS(M,A,M)&gt;
+#&gt;  9 A11   &lt;ETS(M,A,M)&gt;
+#&gt; 10 A12   &lt;ETS(M,N,A)&gt;
+#&gt; # ℹ 73 more rows</code></pre>
+</div>
+</div>
+<p>Forecasts are produced from all fitted models by applying the <code>forecast()</code> function to the model table.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>pbs_fc <span class="ot">&lt;-</span> <span class="fu">forecast</span>(pbs_fit, <span class="at">h =</span> <span class="dv">1</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>pbs_fc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A fable: 83 x 5 [1M]
+#&gt; # Key:     ATC2, .model [83]
+#&gt;    ATC2  .model    Month
+#&gt;    &lt;chr&gt; &lt;chr&gt;     &lt;mth&gt;
+#&gt;  1 A01   ets    1994 Jul
+#&gt;  2 A02   ets    1994 Jul
+#&gt;  3 A03   ets    1994 Jul
+#&gt;  4 A04   ets    1994 Jul
+#&gt;  5 A06   ets    1994 Jul
+#&gt;  6 A07   ets    1994 Jul
+#&gt;  7 A09   ets    1994 Jul
+#&gt;  8 A10   ets    1994 Jul
+#&gt;  9 A11   ets    1994 Jul
+#&gt; 10 A12   ets    1994 Jul
+#&gt; # ℹ 73 more rows
+#&gt; # ℹ 2 more variables: Scripts &lt;dist&gt;, .mean &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>The forecasts are in the <code>Scripts</code> column. Note that each of them is a Normal distribution where the mean and variance has been estimated using the ETS model. The mean of the forecast distribution is given as <code>.mean</code>.</p>
+<p>We can compute the density scores using the <code>log_likelihood()</code> function from the <code>distributional</code> package, and calculate the lookout probabilities.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>pbs_scores <span class="ot">&lt;-</span> pbs_fc <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">fcast =</span> Scripts) <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(pbs <span class="sc">|&gt;</span> <span class="fu">filter</span>(t <span class="sc">==</span> <span class="dv">37</span>), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Month"</span>, <span class="st">"ATC2"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">s =</span> <span class="sc">-</span>distributional<span class="sc">::</span><span class="fu">log_likelihood</span>(fcast, Scripts),</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">prob =</span> <span class="fu">surprisals</span>(s)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>pbs_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tsibble: 83 x 9 [?]
+#&gt; # Key:       ATC2, .model [83]
+#&gt;    ATC2  .model    Month
+#&gt;    &lt;chr&gt; &lt;chr&gt;     &lt;mth&gt;
+#&gt;  1 A01   ets    1994 Jul
+#&gt;  2 A02   ets    1994 Jul
+#&gt;  3 A03   ets    1994 Jul
+#&gt;  4 A04   ets    1994 Jul
+#&gt;  5 A06   ets    1994 Jul
+#&gt;  6 A07   ets    1994 Jul
+#&gt;  7 A09   ets    1994 Jul
+#&gt;  8 A10   ets    1994 Jul
+#&gt;  9 A11   ets    1994 Jul
+#&gt; 10 A12   ets    1994 Jul
+#&gt; # ℹ 73 more rows
+#&gt; # ℹ 6 more variables: fcast &lt;dist&gt;, .mean &lt;dbl&gt;, Scripts &lt;dbl&gt;, t &lt;dbl&gt;,
+#&gt; #   s &lt;dbl&gt;, prob &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>This process is repeated as we increase the size of the training set. The following code block carries out the calculations in a loop. Before starting the calculations, we will set up some new columns in which to store the forecasts, scores and probabilities at each iteration.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>compute_pbs_scores <span class="ot">&lt;-</span> <span class="cf">function</span>(pbs) {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  pbs <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">s =</span> <span class="cn">NA_real_</span>, <span class="at">prob =</span> <span class="cn">NA_real_</span>, <span class="at">fmean =</span> <span class="cn">NA_real_</span>, <span class="at">fvar =</span> <span class="cn">NA_real_</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">36</span><span class="sc">:</span>(<span class="fu">max</span>(pbs<span class="sc">$</span>t) <span class="sc">-</span> <span class="dv">1</span>)) {</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Fit ETS model to all series and compute 1-step forecasts</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    pbs_fc <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(t <span class="sc">&lt;=</span> i) <span class="sc">|&gt;</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">model</span>(<span class="at">ets =</span> <span class="fu">ETS</span>(Scripts)) <span class="sc">|&gt;</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">forecast</span>(<span class="at">h =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rename</span>(<span class="at">fcast =</span> Scripts) <span class="sc">|&gt;</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(.mean))</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate anomaly scores and probabilities</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    pbs_scores <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(t <span class="sc">==</span> i <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">right_join</span>(pbs_fc, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Month"</span>, <span class="st">"ATC2"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">newmean =</span> <span class="fu">mean</span>(fcast),</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">newvar =</span> distributional<span class="sc">::</span><span class="fu">variance</span>(fcast),</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">news =</span> <span class="sc">-</span>distributional<span class="sc">::</span><span class="fu">log_likelihood</span>(fcast, Scripts),</span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">newprob =</span> <span class="fu">surprisals</span>(news)</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">|&gt;</span></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(Month, ATC2, news, newprob, newmean, newvar)</span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add scores to pbs data set</span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>    pbs <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">left_join</span>(pbs_scores, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"Month"</span>, <span class="st">"ATC2"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(</span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">fmean =</span> <span class="fu">if_else</span>(<span class="sc">!</span><span class="fu">is.na</span>(newmean), newmean, fmean),</span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">fvar =</span> <span class="fu">if_else</span>(<span class="sc">!</span><span class="fu">is.na</span>(newvar), newvar, fvar),</span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">s =</span> <span class="fu">if_else</span>(<span class="sc">!</span><span class="fu">is.na</span>(news), news, s),</span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>        <span class="at">prob =</span> <span class="fu">if_else</span>(<span class="sc">!</span><span class="fu">is.na</span>(newprob), newprob, prob)</span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">|&gt;</span></span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(<span class="sc">-</span>news, <span class="sc">-</span>newprob, <span class="sc">-</span>newmean, <span class="sc">-</span>newvar)</span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pbs)</span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>pbs_scores <span class="ot">&lt;-</span> <span class="fu">compute_pbs_scores</span>(pbs) <span class="sc">|&gt;</span> <span class="fu">cache</span>(<span class="st">"pbs_scores"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>pbs_scores</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tsibble: 17,016 x 8 [1M]
+#&gt; # Key:       ATC2 [84]
+#&gt;    ATC2     Month Scripts     t     s  prob fmean  fvar
+#&gt;    &lt;chr&gt;    &lt;mth&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 A01   1991 Jul    22.6     1    NA    NA    NA    NA
+#&gt;  2 A01   1991 Aug    20.4     2    NA    NA    NA    NA
+#&gt;  3 A01   1991 Sep    21.4     3    NA    NA    NA    NA
+#&gt;  4 A01   1991 Oct    23.7     4    NA    NA    NA    NA
+#&gt;  5 A01   1991 Nov    23.5     5    NA    NA    NA    NA
+#&gt;  6 A01   1991 Dec    26.3     6    NA    NA    NA    NA
+#&gt;  7 A01   1992 Jan    22.0     7    NA    NA    NA    NA
+#&gt;  8 A01   1992 Feb    16.4     8    NA    NA    NA    NA
+#&gt;  9 A01   1992 Mar    17.2     9    NA    NA    NA    NA
+#&gt; 10 A01   1992 Apr    18.8    10    NA    NA    NA    NA
+#&gt; # ℹ 17,006 more rows</code></pre>
+</div>
+</div>
+<p>We compare the distribution against the observation for February 2006.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span> <span class="fu">filter</span>(ATC2 <span class="sc">==</span> <span class="st">"A12"</span>, Month <span class="sc">==</span> <span class="fu">yearmonth</span>(<span class="st">"2006 Feb"</span>))</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>fc_a12 <span class="sc">|&gt;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(a12) <span class="sc">+</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> observed, <span class="fu">aes</span>(<span class="at">x =</span> Month, <span class="at">y =</span> Scripts)) <span class="sc">+</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Scripts (thousands)"</span>,</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Forecast of A12 scripts: Feb 2006"</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="dv">35</span>, <span class="dv">145</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>pbs_anomalies <span class="ot">&lt;-</span> pbs <span class="sc">|&gt;</span> <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>pbs_anomalies</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pbs_plot</span>(pbs, pbs_anomalies, <span class="st">"L03"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pbs_plot</span>(pbs, pbs_anomalies, <span class="st">"N07"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Consecutive anomalies are hard to identify because the preceding anomalies corrupt the model.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pbs_plot</span>(pbs, pbs_anomalies, <span class="st">"R06"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>A sequence of near anomalies makes it hard to spot a true anomaly.</p>
+</section>
+<section id="somewhere" class="level2" data-number="9.5">
+<h2 data-number="9.5" class="anchored" data-anchor-id="somewhere"><span class="header-section-number">9.5</span> Somewhere</h2>
+<ul>
+<li>AO vs IO</li>
+<li>tsoutliers package and tsoutliers() function</li>
+<li>smooth() function</li>
+<li></li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-mstl" class="csl-entry" role="listitem">
+Bandara, Kasun, Rob J Hyndman, and Christoph Bergmeir. 2022. <span>“<span>MSTL</span>: A Seasonal-Trend Decomposition Algorithm for Time Series with Multiple Seasonal Patterns.”</span> <em>International J Operational Research</em>. <a href="http://robjhyndman.com/publications/mstl/">http://robjhyndman.com/publications/mstl/</a>.
+</div>
+<div id="ref-Cleveland1990" class="csl-entry" role="listitem">
+Cleveland, R B, W S Cleveland, J E McRae, and I J Terpenning. 1990. <span>“<span>STL</span>: A Seasonal-Trend Decomposition Procedure Based on Loess.”</span> <em>Journal of Official Statistics</em> 6 (1): 3–33. <a href="http://bit.ly/stl1990">http://bit.ly/stl1990</a>.
+</div>
+<div id="ref-Davies1993" class="csl-entry" role="listitem">
+Davies, Laurie, and Ursula Gather. 1993. <span>“The Identification of Multiple Outliers.”</span> <em>Journal of the American Statistical Association</em> 88 (September): 782–92. <a href="https://doi.org/10.1080/01621459.1993.10476339">https://doi.org/10.1080/01621459.1993.10476339</a>.
+</div>
+<div id="ref-supsmu" class="csl-entry" role="listitem">
+Friedman, J H. 1984. <span>“A Variable Span Smoother.”</span> Technical Report No 5. Laboratory for Computational Statistics, Stanford University.
+</div>
+<div id="ref-HMD" class="csl-entry" role="listitem">
+Human Mortality Database. 2024. <span>“<span class="nocase">University of California, Berkeley (USA); Max Planck Institute for Demographic Research (Germany)</span>.”</span> <a href="https://www.mortality.org">www.mortality.org</a>.
+</div>
+<div id="ref-fpp3" class="csl-entry" role="listitem">
+Hyndman, Rob J, and George Athanasopoulos. 2021. <em>Forecasting: Principles and Practice</em>. 3rd ed. Melbourne, Australia: OTexts. <a href="http://OTexts.org/fpp3">http://OTexts.org/fpp3</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/OTexts\.com\/weird");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./08-highdim.html" class="pagination-link" aria-label="High-dimensional methods">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./10-functional.html" class="pagination-link" aria-label="Functional data">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Published by OTexts using <a href="https://quarto.org">Quarto</a>. <i class="fa-solid fa-copyright" aria-label="copyright"></i> <a href="https://robjhyndman.com">Rob J Hyndman</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

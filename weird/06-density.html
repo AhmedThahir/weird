@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Density-based methods – That's weird! Anomaly&nbsp;detection using&nbsp;R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./07-distance.html" rel="next">
+<link href="./05-boxplots.html" rel="prev">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./06-density.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">That’s weird! Anomaly&nbsp;detection using&nbsp;R</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-univariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-multivariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-boxplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-density.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-distance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-functional.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-network.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Network and graph data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-imagevideo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image and video data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-text.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Categorical and textual data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Spaces of probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-cybersecurity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Network intrusions and fraud</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bibliography</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix algebra</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title"><b>Sections</b></h2>
+   
+  <ul>
+  <li><a href="#sec-surprisals" id="toc-sec-surprisals" class="nav-link active" data-scroll-target="#sec-surprisals"><span class="header-section-number">6.1</span> Surprisals</a>
+  <ul class="collapse">
+  <li><a href="#surprisal-probabilities" id="toc-surprisal-probabilities" class="nav-link" data-scroll-target="#surprisal-probabilities">Surprisal probabilities</a></li>
+  <li><a href="#connection-to-highest-density-regions" id="toc-connection-to-highest-density-regions" class="nav-link" data-scroll-target="#connection-to-highest-density-regions">Connection to Highest Density Regions</a></li>
+  <li><a href="#symmetric-distributions" id="toc-symmetric-distributions" class="nav-link" data-scroll-target="#symmetric-distributions">Symmetric distributions</a></li>
+  <li><a href="#connection-to-z-scores" id="toc-connection-to-z-scores" class="nav-link" data-scroll-target="#connection-to-z-scores">Connection to z-scores</a></li>
+  <li><a href="#loo-surprisals" id="toc-loo-surprisals" class="nav-link" data-scroll-target="#loo-surprisals">LOO surprisals</a></li>
+  <li><a href="#sec-gpd-tails" id="toc-sec-gpd-tails" class="nav-link" data-scroll-target="#sec-gpd-tails">Approximate GPD surprisal probabilities</a></li>
+  <li><a href="#approximate-empirical-surprisal-probabilities" id="toc-approximate-empirical-surprisal-probabilities" class="nav-link" data-scroll-target="#approximate-empirical-surprisal-probabilities">Approximate empirical surprisal probabilities</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  </ul></li>
+  <li><a href="#sec-regression-log-scores" id="toc-sec-regression-log-scores" class="nav-link" data-scroll-target="#sec-regression-log-scores"><span class="header-section-number">6.2</span> Linear regression surprisals</a>
+  <ul class="collapse">
+  <li><a href="#model-estimation" id="toc-model-estimation" class="nav-link" data-scroll-target="#model-estimation">Model estimation</a></li>
+  <li><a href="#residuals" id="toc-residuals" class="nav-link" data-scroll-target="#residuals">Residuals</a></li>
+  <li><a href="#loo-residuals" id="toc-loo-residuals" class="nav-link" data-scroll-target="#loo-residuals">LOO residuals</a></li>
+  <li><a href="#example-shiraz-reviews" id="toc-example-shiraz-reviews" class="nav-link" data-scroll-target="#example-shiraz-reviews">Example: Shiraz reviews</a></li>
+  <li><a href="#surprisal-probabilities-1" id="toc-surprisal-probabilities-1" class="nav-link" data-scroll-target="#surprisal-probabilities-1">Surprisal probabilities</a></li>
+  </ul></li>
+  <li><a href="#gam-surprisals" id="toc-gam-surprisals" class="nav-link" data-scroll-target="#gam-surprisals"><span class="header-section-number">6.3</span> GAM surprisals</a></li>
+  <li><a href="#sec-kdescores" id="toc-sec-kdescores" class="nav-link" data-scroll-target="#sec-kdescores"><span class="header-section-number">6.4</span> KDE surprisals</a>
+  <ul class="collapse">
+  <li><a href="#leave-one-out-kde-surprisals" id="toc-leave-one-out-kde-surprisals" class="nav-link" data-scroll-target="#leave-one-out-kde-surprisals">Leave-one-out kde surprisals</a></li>
+  <li><a href="#sec-lookout" id="toc-sec-lookout" class="nav-link" data-scroll-target="#sec-lookout">The lookout algorithm</a></li>
+  <li><a href="#example-old-faithful-eruption-durations" id="toc-example-old-faithful-eruption-durations" class="nav-link" data-scroll-target="#example-old-faithful-eruption-durations">Example: Old Faithful eruption durations</a></li>
+  <li><a href="#more-examples" id="toc-more-examples" class="nav-link" data-scroll-target="#more-examples">More examples</a></li>
+  </ul></li>
+  <li><a href="#other-density-based-methods" id="toc-other-density-based-methods" class="nav-link" data-scroll-target="#other-density-based-methods"><span class="header-section-number">6.5</span> Other density-based methods</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-27933797-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-27933797-2');
+  gtag('config', 'G-JKBLG3XQGY')
+</script>
+<link href="https://fonts.googleapis.com/css?family=Fira+Sans|Noto+Serif" rel="stylesheet">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack-subset.css">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-density-methods" class="quarto-section-identifier"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Anomalies are observations that are unlikely to have come from the same distribution as the rest of the data. One method to identify anomalies is to estimate the probability distribution of the data and then find observations that are improbable under that distribution. This is the approach taken by density-based methods, where anomalies are defined as observations with low probability.</p>
+<section id="sec-surprisals" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="sec-surprisals"><span class="header-section-number">6.1</span> Surprisals</h2>
+<p>Any density-based method of anomaly detection first requires that we have a density estimate at each observation, which we will denote by <span class="math inline">f(\bm{y}_i)</span>. This may be an assumed density, or estimated from the data; it may be a parametric function, or a nonparametric estimate; it may be a conditional density or a marginal density. Wherever it comes from, we will assume that <span class="math inline">f</span> represents a probability density function that is appropriate for the data set. When <span class="math inline">\bm{y}_i</span> takes values on a discrete space (such as the integers), then <span class="math inline">f</span> is a probability mass function, but we will call it a “density” for convenience when discussing methods that can apply to both discrete and continuous data. In many cases, <span class="math inline">f(\bm{y}_i)</span> is the estimated <em>likelihood</em> of the observation from a given model.</p>
+<p>The “surprisal” <span class="citation" data-cites="Tribus1961">(<a href="references.html#ref-Tribus1961" role="doc-biblioref">Tribus 1961</a>)</span> of an observation <span class="math inline">\bm{y}_i</span>, is defined as <span id="eq-surprisal"><span class="math display">
+  s_i = -\log f(\bm{y}_i),
+\tag{6.1}</span></span> measuring the surprise in seeing the observation. So it is a measure of how anomalous (or surprising) that observation is, given the density <span class="math inline">f</span>. A large value of <span class="math inline">s_i</span> indicates that <span class="math inline">\bm{y}_i</span> is not a likely value, and so is a potential anomaly. On the other hand, typical values will have low surprisals. In information theory, the average surprisal is known as the entropy of a random variable <span class="citation" data-cites="Cover2006 Stone2022">(<a href="references.html#ref-Cover2006" role="doc-biblioref">Cover and Thomas 2006</a>; <a href="references.html#ref-Stone2022" role="doc-biblioref">Stone 2022</a>)</span>, and provides a measure of uncertainty.</p>
+<p>Surprisals are commonly used in forecasting and prediction problems, where they known as “log scores”, and are used to assess whether an estimated distribution <span class="math inline">f</span> provides a good description of the future data values <span class="math inline">y</span> <span class="citation" data-cites="Gneiting2014">(<a href="references.html#ref-Gneiting2014" role="doc-biblioref">Gneiting and Katzfuss 2014</a>)</span>. In that context, the data are thought to be a reliable reflection of the underlying processes, and once the data are observed, the surprisal is used to assess how well the estimated distribution <span class="math inline">f</span> matches what actually happened. In this book, we are using surprisals in reverse — we assume <span class="math inline">f</span> is a good description of the underlying processes, and then we use the surprisals to identify observations that are unlikely to have come from that distribution.</p>
+<section id="surprisal-probabilities" class="level3">
+<h3 class="anchored" data-anchor-id="surprisal-probabilities">Surprisal probabilities</h3>
+<p>We can use surprisals to compute the probability of an observation being at least as anomalous as <span class="math inline">y_i</span> under the distribution <span class="math inline">f</span>: <span id="eq-pi-density"><span class="math display">
+p_i = \int f(u) 𝟙(-\log f(u) &gt; s_i) du = \int f(u) 𝟙(f(u) &lt; f(y_i)) du,
+\tag{6.2}</span></span> where <span class="math inline">𝟙(z)</span> is an indicator function taking value 1 when <span class="math inline">z</span> is true and 0 otherwise.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-density-scores" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-density-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-density-scores-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-density-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.1: Top: Density with one observation shown at <span class="math inline">y_i</span>. The shaded area shows the area where <span class="math inline">f(y) &lt; f(y_i)</span>, corresponding to <span class="math inline">p_i</span>. Middle: surprisals for different values of <span class="math inline">y</span>. Bottom: surprisal probabilities for different values of <span class="math inline">y</span>. In this example, <span class="math inline">p_i = 0.1</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The <code>surprisals()</code> function takes values of the data <span class="math inline">y_i</span> and returns values of either <span class="math inline">s_i</span> or <span class="math inline">p_i</span> (depending on the <code>probability</code> argument), where the assumed density <span class="math inline">f</span> can be provided as a distribution object from the <code>distributional</code> package.</p>
+</section>
+<section id="connection-to-highest-density-regions" class="level3">
+<h3 class="anchored" data-anchor-id="connection-to-highest-density-regions">Connection to Highest Density Regions</h3>
+<p>Surprisal probabilities are related to highest density regions discussed in <a href="02-univariate.html#sec-hdr" class="quarto-xref"><span>Section 2.5</span></a> and <a href="03-multivariate.html#sec-mhdr" class="quarto-xref"><span>Section 3.4</span></a>. If <span class="math inline">y_i</span> lies on the boundary of the <span class="math inline">100(1-\alpha)\%</span> highest density region, then <span class="math inline">p_i = 1-\alpha</span>. Therefore, if we want a false positive rate of <span class="math inline">\alpha</span>, we can label <span class="math inline">y_i</span> as an anomaly if <span class="math inline">p_i &lt; \alpha</span>.</p>
+</section>
+<section id="symmetric-distributions" class="level3">
+<h3 class="anchored" data-anchor-id="symmetric-distributions">Symmetric distributions</h3>
+<p>For any symmetric distribution, <span class="math inline">p_i = 2[1 - F(c+|y_i-c|)]</span>, where <span class="math inline">F</span> is the corresponding distribution function centered at <span class="math inline">c</span>. Therefore, under the Normal distribution <span class="math inline">N(\mu, \sigma^2)</span>, <span class="math inline">p_i = 2[1-\Phi(|y_i-\mu|/\sigma)]</span>, where <span class="math inline">\Phi</span> is the standard Normal distribution function.</p>
+</section>
+<section id="connection-to-z-scores" class="level3">
+<h3 class="anchored" data-anchor-id="connection-to-z-scores">Connection to z-scores</h3>
+<p>The above result shows that when <span class="math inline">f</span> is a Normal density, identifying anomalies as observations with <span class="math inline">p_i &lt; \alpha</span> is equivalent to a z-score test (<a href="04-tests.html#sec-zscores" class="quarto-xref"><span>Section 4.2</span></a>) with the threshold set to the <span class="math inline">1-\alpha/2</span> quantile of the standard Normal distribution.</p>
+</section>
+<section id="loo-surprisals" class="level3">
+<h3 class="anchored" data-anchor-id="loo-surprisals">LOO surprisals</h3>
+<p>If the density <span class="math inline">f</span> has been estimated from the data, then there is a problem of circular reasoning. Any genuine anomalies may affect the estimated density, and then they may not appear to be anomalies. Therefore, it is sometimes useful to consider the leave-one-out (LOO) estimate given by <span class="math inline">f_{-i}</span>. That is, <span class="math inline">f_{-i}</span> is the density estimate using all observations other than the <span class="math inline">i</span>th observation. Then an unusual observation can’t influence the density estimate, giving us a better measure of how anomalous it really is. In this case, we will call the associated surprisal, a “LOO surprisal”, given by <span class="math inline">s_i = -\log f_{-i}(\bm{y}_i)</span>.</p>
+<p>The <code>surprisals()</code> function has a <code>loo</code> argument for specifying whether we want LOO surprisals used in the computation.</p>
+</section>
+<section id="sec-gpd-tails" class="level3">
+<h3 class="anchored" data-anchor-id="sec-gpd-tails">Approximate GPD surprisal probabilities</h3>
+<p>If we do not know what the distribution of the data should be, or if we think our assumed distribution is incorrect for some reason, there are some ways to find approximate surprisal probabilities that are still accurate even when the assumed distribution <span class="math inline">f</span> is not.</p>
+<p>Let <span class="math inline">f^*</span> denote the assumed (and possibly incorrect) density function. It might be a poor estimate of the true density, or it might just be a density on the same sample space as the data. Using this assumed density, we can compute the surprisals, <span class="math inline">s_i = -\log f^*(\bm{y}_i)</span>.</p>
+<p>Then we can fit a Generalized Pareto Distribution (GPD) to the largest surprisals using the POT approach discussed in <a href="02-univariate.html#sec-evt" class="quarto-xref"><span>Section 2.8</span></a>. For example, we may fit a GPD using the <span class="math inline">90^{\text{th}}</span> percentile of <span class="math inline">s_i</span> values as the threshold. We apply the fitted GPD distribution to the surprisals to obtain the surprisal probability of each observation. Even when <span class="math inline">f^*</span> is incorrect or poorly estimated, the extreme surprisals will still follow a Generalized Pareto Distribution. So it is a safe choice.</p>
+<p>The approach does require a relatively large number of surprisals to be available. We are typically only using the top 10% of observations in estimating the GPD, so we would normally need at least a few hundred observations to start with.</p>
+<p>The <code>surprisals()</code> function has an approximation argument for specifying if we want to use the GPD approximation in computing surprisal probabilities.</p>
+</section>
+<section id="approximate-empirical-surprisal-probabilities" class="level3">
+<h3 class="anchored" data-anchor-id="approximate-empirical-surprisal-probabilities">Approximate empirical surprisal probabilities</h3>
+<p>An alternative approach that does not require a GPD is to estimate <span class="math inline">p_i</span> as the proportion of surprisals larger than <span class="math inline">s_i</span>. For large <span class="math inline">n</span>, this provides a quick and convenient estimate of <span class="math inline">p_i</span> that is accurate even when the assumed distribution <span class="math inline">f^*</span> is not. Suppose <span class="math inline">f</span> is the true (unknown) density, and <span class="math inline">f^*</span> is the assumed (possibly incorrect) density. Then for the <span class="math inline">p_i</span> values to be accurate, we only need the ordering of <span class="math inline">-\log f(y_i)</span> to be similar to <span class="math inline">-\log f^*(y_i)</span> in the tails of the distribution. This approach can work well for moderate values of <span class="math inline">p_i</span>, but we need a large number of available surprisals in order to estimate small values of <span class="math inline">p_i</span>.</p>
+<p>The approximation argument of <code>surprisals()</code> can also be used to specify if we want to use the empirical surprisal probabilities.</p>
+</section>
+<section id="example" class="level3">
+<h3 class="anchored" data-anchor-id="example">Example</h3>
+<p>For example, consider the 1000 values contained in the first column of <code>n01</code>. These were generated from a standard Normal distribution. We can use <code>surprisals()</code> to identify anomalies with probability less than 1%. This is equivalent to z-scores greater than 2.576 in absolute value.</p>
+<p>We will use all three methods described above using the correct density in computing the surprisals, and then repeat the calculation using an incorrect density. For the incorrect density, we will use a <span class="math inline">t_3</span> distribution, which has much longer tails than the true <span class="math inline">N(0,1)</span> distribution.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute surprisal probabilities of v1 assuming a standard Normal distribution</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># and a t4 distribution</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>norm_prob <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> n01<span class="sc">$</span>v1,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span>      <span class="fu">surprisals</span>(y, <span class="at">distribution =</span> <span class="fu">dist_normal</span>()),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_gpd =</span>  <span class="fu">surprisals</span>(y, <span class="at">distribution =</span> <span class="fu">dist_normal</span>(), <span class="at">approximation =</span> <span class="st">"gpd"</span>),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_emp =</span>  <span class="fu">surprisals</span>(y, <span class="at">distribution =</span> <span class="fu">dist_normal</span>(), <span class="at">approximation =</span> <span class="st">"empirical"</span>),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">pt =</span>     <span class="fu">surprisals</span>(y, <span class="at">distribution =</span> <span class="fu">dist_student_t</span>(<span class="dv">4</span>)),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">pt_gpd =</span> <span class="fu">surprisals</span>(y, <span class="at">distribution =</span> <span class="fu">dist_student_t</span>(<span class="dv">4</span>), <span class="at">approximation =</span> <span class="st">"gpd"</span>),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">pt_emp =</span> <span class="fu">surprisals</span>(y, <span class="at">distribution =</span> <span class="fu">dist_student_t</span>(<span class="dv">4</span>), <span class="at">approximation =</span> <span class="st">"empirical"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>norm_prob <span class="sc">|&gt;</span> <span class="fu">arrange</span>(p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1,000 × 7
+#&gt;        y        p    p_gpd p_emp     pt   pt_gpd pt_emp
+#&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1  3.81 0.000139 0.000135 0.001 0.0191 0.000132  0.001
+#&gt;  2  3.06 0.00225  0.00261  0.002 0.0380 0.00284   0.002
+#&gt;  3 -3.01 0.00263  0.00308  0.003 0.0398 0.00334   0.003
+#&gt;  4 -3.00 0.00273  0.00320  0.004 0.0402 0.00346   0.004
+#&gt;  5 -2.94 0.00328  0.00389  0.005 0.0425 0.00418   0.005
+#&gt;  6 -2.89 0.00387  0.00461  0.006 0.0448 0.00492   0.006
+#&gt;  7  2.68 0.00746  0.00913  0.007 0.0556 0.00948   0.007
+#&gt;  8  2.65 0.00807  0.00991  0.008 0.0572 0.0102    0.008
+#&gt;  9 -2.60 0.00943  0.0116   0.009 0.0604 0.0119    0.009
+#&gt; 10 -2.59 0.00953  0.0118   0.01  0.0607 0.0121    0.01 
+#&gt; # ℹ 990 more rows</code></pre>
+</div>
+</div>
+<p>The most accurate values are in column <code>p</code>, as this uses the correct distribution applied to the correct surprisals. Notice that <code>p_gpd</code> and <code>p_emp</code> are both relatively accurate: the GPD and empirical approximations work. For the probabilities calculated using the incorrect distribution, <code>pt</code> is relatively inaccurate, with much larger probabilities than they should be, especially in the extreme tails. But <code>pt_gpd</code> and <code>pt_emp</code> are both reasonable estimates, despite being based on an incorrect distribution for computing the surprisals. In fact, <code>p_emp</code> and <code>pt_emp</code> are identical, because the ordering of the surprisals is unchanged despite the incorrect distribution being used.</p>
+<p>The various estimates are displayed in <a href="#fig-surprisal_prob" class="quarto-xref">Figure&nbsp;<span>6.2</span></a> for values of <span class="math inline">y</span> greater than 2.5, showing how the estimates (other than <code>pt</code>) are particularly accurate in the extreme tails, where we need them for anomaly detection.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>norm_prob <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(y <span class="sc">&gt;</span> <span class="fl">2.5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(p<span class="sc">:</span>pt_emp, <span class="at">names_to =</span> <span class="st">"Estimate"</span>, <span class="at">values_to =</span> <span class="st">"Probability"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> Probability, <span class="at">col =</span> Estimate)) <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-surprisal_prob" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-surprisal_prob-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-surprisal_prob-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-surprisal_prob-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.2: Surprisal probabilities estimated using the correct N(0,1) distribution and using an incorrect <span class="math inline">t_4</span> distribution. The GPD and empirical estimates of surprisal probabilities are still accurate, even when the wrong distribution is used to compute the surprisal values.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In summary, even when we don’t know the distribution of the data, we can use some incorrect assumed distribution to compute the surprisals, and then apply either a GPD or the empirical distribution to obtain good estimates of the surprisal probabilities.</p>
+</section>
+</section>
+<section id="sec-regression-log-scores" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="sec-regression-log-scores"><span class="header-section-number">6.2</span> Linear regression surprisals</h2>
+<p>Suppose we want to find anomalies amongst <span class="math inline">n</span> univariate observations <span class="math inline">y_1,\dots,y_n</span>, and we have <span class="math inline">p</span> variables that we think might be useful for predicting <span class="math inline">y</span>. Then we can write the conditional density as <span class="math inline">f(y \mid \bm{x})</span>, where <span class="math inline">\bm{x}</span> is a <span class="math inline">p</span>-dimensional vector of predictor variables. Anomalies in <span class="math inline">y</span> are identified as observations that are unlikely to have come from the conditional density <span class="math inline">f</span>. This is commonly called a “regression model”, regardless of the form of <span class="math inline">f</span>, or whether the relationship with <span class="math inline">\bm{x}</span> is linear or not.</p>
+<p>By far the most common type of regression model assumes that <span class="math inline">f</span> is a Normal distribution, and that the conditional mean is a linear function of <span class="math inline">\bm{x}</span>. Note that this does <em>not</em> mean that <span class="math inline">y</span> is Normally distributed, or that <span class="math inline">\bm{x}</span> has a Normal distribution. The assumption is that the <em>conditional</em> distribution of <span class="math inline">y</span> given <span class="math inline">\bm{x}</span> is Normal, which can easily be checked by looking at the residuals from the regression model.</p>
+<p>For a linear Normal regression model, with independent observations and homoscedastic errors, the conditional distribution is given by <span id="eq-gaussian-regression"><span class="math display">
+  y \mid \bm{x} \sim N(\bm{x}_+'\bm{\beta}, \sigma^2),
+\tag{6.3}</span></span> where <span class="math inline">\bm{x}_+ = [1, \bm{x}]'</span> is a <span class="math inline">(p+1)</span>-dimensional vector containing a 1 in the first position and the predictors in the remaining positions, and <span class="math inline">\bm{\beta}</span> is a <span class="math inline">(p+1)</span>-dimensional vector of regression coefficients.</p>
+<section id="model-estimation" class="level3">
+<h3 class="anchored" data-anchor-id="model-estimation">Model estimation</h3>
+<p>The model can be written in matrix form as <span class="math display">
+  \bm{y} \sim N(\bm{X}\bm{\beta}, \sigma^2\bm{I}),
+</span> where <span class="math inline">\bm{X}</span> is an <span class="math inline">n\times(p+1)</span> matrix with the first column being a vector of 1s, and the other columns containing the predictor variables, or equivalently as <span id="eq-error-distribution"><span class="math display">
+  \bm{\varepsilon} = \bm{y} - \bm{X}\bm{\beta} \sim N(\bm{0}, \sigma^2\bm{I}).
+\tag{6.4}</span></span> Provided <span class="math inline">\bm{X}</span> is of rank <span class="math inline">p+1</span>, and the errors <span class="math inline">\bm{\varepsilon}</span> are independent of <span class="math inline">\bm{X}</span>, the model can be estimated using ordinary least squares regression <span class="citation" data-cites="seberlee2003">(<a href="references.html#ref-seberlee2003" role="doc-biblioref">Seber and Lee 2003</a>)</span>, resulting in the estimate <span class="math display">
+  \hat{\bm{\beta}} = (\bm{X}'\bm{X})^{-1}\bm{X}'\bm{y}.
+</span> The fitted values (i.e., predicted values for the training data) are given by <span class="math display">
+  \hat{\bm{y}} = \bm{X}\hat{\bm{\beta}} = \bm{H}\bm{y},
+</span> where <span class="math inline">\bm{H} = \bm{X}(\bm{X}'\bm{X})^{-1}\bm{X}'</span> is known as the “hat”-matrix because it creates the “y-hat” values <span class="math inline">\hat{\bm{y}}</span> from the data <span class="math inline">\bm{y}</span>.</p>
+<p>The diagonals of <span class="math inline">\bm{H}</span>, given by <span class="math inline">h_1,\dots,h_n</span>, take values between 0 and 1. These are known as the “leverage” values <span class="citation" data-cites="faraway2004linear">(<a href="references.html#ref-faraway2004linear" role="doc-biblioref">Faraway 2014, p69</a>)</span>, and measure how much each observation influences the corresponding fitted value. High leverage values (close to 1) correspond to observations that have a large influence on the estimated coefficients, and so leaving those observations out will lead to very different values for the fitted values and residuals. On the other hand, small leverage values (close to 0) correspond to observations that have little influence on the estimated coefficients, and so leaving those observations out will lead to similar values for the fitted values and residuals.</p>
+</section>
+<section id="residuals" class="level3">
+<h3 class="anchored" data-anchor-id="residuals">Residuals</h3>
+<p>The residuals from the model are given by <span id="eq-residual-distribution"><span class="math display">
+  \bm{e} = \bm{y} - \hat{\bm{y}} = (\bm{I} - \bm{H})\bm{y}.
+\tag{6.5}</span></span> Note that the residuals have the distribution <span class="math inline">\bm{e}\mid\bm{X} \sim N(\bm{0}, \sigma^2(\bm{I} - \bm{H}))</span>, which is not quite the same as the distribution of the errors given by <a href="#eq-error-distribution" class="quarto-xref">Equation&nbsp;<span>6.4</span></a>. However, as <span class="math inline">n\rightarrow\infty</span>, <span class="math inline">\bm{H}\rightarrow\bm{I}</span>, so the two distributions are asymptotically equivalent. Often, we need standardized residuals, which are obtained by dividing each residual by its estimated standard deviation, giving <span class="math display"> r_i = \frac{e_i}{\hat{\sigma}\sqrt{1-h_i}}, \qquad i = 1,\dots, n,
+</span> where <span id="eq-residual-variance"><span class="math display">
+\hat\sigma^2 = \frac{1}{n-p-1}\sum_{i=1}^n e_i^2
+\tag{6.6}</span></span> is the estimated residual variance.</p>
+<p>A linear model can be estimated in R using the <code>stats::lm()</code> function. The <code>broom::augment()</code> function will compute the residuals (named <code>.resid</code>), the standardized residuals (named <code>.std.resid</code>), and the leverage values (names <code>.hat</code>).</p>
+<p>The surprisals under the Gaussian linear regression model <a href="#eq-gaussian-regression" class="quarto-xref">Equation&nbsp;<span>6.3</span></a> can be estimated using these standardized residuals, giving <span id="eq-regression-log-score"><span class="math display">
+  s_i = -\log\phi(r_i),
+\tag{6.7}</span></span> where <span class="math inline">\phi(u) = (2\pi)^{-1/2}e^{-u^2}</span> is the standard normal density. This can be computed as follows, assuming that <code>fit</code> is the output from <code>stats::lm()</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>broom<span class="sc">::</span><span class="fu">augment</span>(fit) <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">surprisals =</span> <span class="sc">-</span><span class="fu">dnorm</span>(.std.resid, <span class="at">log =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Equivalently, the <code>surprisals()</code> function will compute them:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">surprisals</span>(fit, <span class="at">probability =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="loo-residuals" class="level3">
+<h3 class="anchored" data-anchor-id="loo-residuals">LOO residuals</h3>
+<p>The leave-one-out residual for the <span class="math inline">i</span>th observation is defined as the difference between <span class="math inline">\bm{y}_i</span> and the predicted value obtained using a model fitted to all observations except the <span class="math inline">i</span>th observation. In this context, LOO residuals are often called PRESS (prediction error sum of squares) residuals. At first, it appears that calculating LOO residuals involves a lot of computation — estimating <span class="math inline">n</span> separate models. However, the leave-one-out residuals are easily obtained without actually having to re-estimate the model many times. It can be shown <span class="citation" data-cites="Montgomery2012">(<a href="references.html#ref-Montgomery2012" role="doc-biblioref">Montgomery, Peck, and Vining 2012</a>, Appendix C.7)</span> that the leave-one-out (LOO) residuals are given by <span id="eq-loo-residuals"><span class="math display">
+  e_{-i}  = e_{i}/(1-h_{i}),
+\tag{6.8}</span></span> where <span class="math inline">e_{i}</span> is the residual obtained from fitting the model to <em>all</em> observations.</p>
+<p>The variance of <span class="math inline">e_{-i}</span> is given by <span class="math display">
+  \frac{\text{Var}(e_i)}{(1-h_i)^2} = \frac{\sigma^2}{1-h_i},
+</span> so we can standardize each LOO residual to obtain <span class="math display">
+\frac{e_i / (1-h_i)}{\sigma/\sqrt{1-h_i}} = \frac{e_i}{\sigma \sqrt{1-h_i}}
+</span> To avoid any anomalies affecting the estimate of <span class="math inline">\sigma</span>, we consider again the leave-one-out models. If we leave out the <span class="math inline">i</span>th observation, and fit a regression model to the remaining observations, then the estimated variance of the residuals is given by <span class="citation" data-cites="Montgomery2012">(<a href="references.html#ref-Montgomery2012" role="doc-biblioref">Montgomery, Peck, and Vining 2012</a>, Appendix C.8)</span> <span id="eq-loo-residual-variance"><span class="math display">
+  \hat\sigma_{-i}^2 = \frac{1}{n-p-2}\left[(n-p-1)\hat\sigma^2 - e_{i}^2/(1-h_i)\right],
+\tag{6.9}</span></span> where <span class="math inline">\hat\sigma^2</span> is given by <a href="#eq-residual-variance" class="quarto-xref">Equation&nbsp;<span>6.6</span></a>. These are computed by <code>broom::augment()</code> and are returned in the column <code>.sigma</code>. Thus the standardized LOO residuals (also known as “externally studentized residuals”) are given by <span class="math display">
+r_{-i} = \frac{e_i}{\hat\sigma_{-i} \sqrt{1-h_i}}.
+</span> Finally, the LOO regression surprisals are given by <span id="eq-log-loo-regression-scores"><span class="math display">
+  s_{-i} = -\log \phi(r_{-i})
+\tag{6.10}</span></span></p>
+<p>If <code>fit</code> is the output from <code>stats::lm()</code>, then these quantities can be computed as follows.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>broom<span class="sc">::</span><span class="fu">augment</span>(fit) <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">std_loo_res =</span> .resid <span class="sc">/</span> (.sigma <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> .hat)),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">loo_surprisals =</span> <span class="sc">-</span><span class="fu">log</span>(<span class="fu">dnorm</span>(std_loo_res, <span class="at">log =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>More simply, we can just use the <code>surprisals()</code> function again:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">surprisals</span>(fit, <span class="at">type =</span> <span class="st">"loo"</span>, <span class="at">probability =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="example-shiraz-reviews" class="level3">
+<h3 class="anchored" data-anchor-id="example-shiraz-reviews">Example: Shiraz reviews</h3>
+<p>For example, consider the wine reviews of Shiraz (aka Syrah), plotted in <a href="01-intro.html#fig-shiraz" class="quarto-xref">Figure&nbsp;<span>1.6</span></a>. We can fit a linear regression model to these data to obtain a conditional density estimate of price given the points awarded to each wine. Then, <span class="math inline">\bm{X}</span> contains just two columns: a column of 1s, and a column containing the points values. The vector <span class="math inline">\bm{y}</span> contains the log prices of the wines. The model can be fitted as follows.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>wine_reviews <span class="ot">&lt;-</span> <span class="fu">fetch_wine_reviews</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>shiraz <span class="ot">&lt;-</span> wine_reviews <span class="sc">|&gt;</span> <span class="fu">filter</span>(variety <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Shiraz"</span>, <span class="st">"Syrah"</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>fit_wine <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(price) <span class="sc">~</span> points, <span class="at">data =</span> shiraz)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_wine)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; 
+#&gt; Call:
+#&gt; lm(formula = log(price) ~ points, data = shiraz)
+#&gt; 
+#&gt; Residuals:
+#&gt;     Min      1Q  Median      3Q     Max 
+#&gt; -1.6407 -0.3361 -0.0109  0.3052  2.9909 
+#&gt; 
+#&gt; Coefficients:
+#&gt;             Estimate Std. Error t value Pr(&gt;|t|)    
+#&gt; (Intercept) -6.05913    0.20731   -29.2   &lt;2e-16 ***
+#&gt; points       0.10690    0.00232    46.0   &lt;2e-16 ***
+#&gt; ---
+#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#&gt; 
+#&gt; Residual standard error: 0.485 on 4494 degrees of freedom
+#&gt; Multiple R-squared:  0.32,   Adjusted R-squared:  0.32 
+#&gt; F-statistic: 2.12e+03 on 1 and 4494 DF,  p-value: &lt;2e-16</code></pre>
+</div>
+</div>
+<p>The fitted model can be written as <span class="math display">
+  \log(\text{Price}) \sim N(-6.059 + 0.107 \times \text{Points}, 0.485^2),
+</span> and is depicted in <a href="#fig-shiraz-regression" class="quarto-xref">Figure&nbsp;<span>6.3</span></a> with 95% prediction intervals.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">augment</span>(fit_wine, <span class="at">data =</span> shiraz, <span class="at">interval =</span> <span class="st">"prediction"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">lwr =</span> <span class="fu">exp</span>(.lower),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">upr =</span> <span class="fu">exp</span>(.upper),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">location =</span> <span class="fu">case_when</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      price <span class="sc">&lt;</span> lwr <span class="sc">~</span> <span class="st">"below"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      price <span class="sc">&gt;</span> upr <span class="sc">~</span> <span class="st">"above"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"within"</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="sc">|&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> price, <span class="at">x =</span> points, <span class="at">col =</span> location)) <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> <span class="dv">0</span>, <span class="at">width =</span> <span class="fl">0.1</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lwr, <span class="at">ymax =</span> upr), <span class="at">fill =</span> <span class="st">"#cccccc"</span>, <span class="at">alpha =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">exp</span>(.fitted)), <span class="at">color =</span> <span class="st">"#666666"</span>) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>() <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>, <span class="at">col =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#0072B2"</span>, <span class="st">"#D55E00"</span>, <span class="st">"#AAAAAA"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-shiraz-regression" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-shiraz-regression-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-shiraz-regression-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-shiraz-regression-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.3: Log price of Shiraz as a function of points, with 95% prediction intervals. The points are horizontally jitted to reduce overplotting. Points outside the prediction intervals are colored.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The LOO surprisals obtained from this model are shown in <a href="#fig-shiraz-regression-scores" class="quarto-xref">Figure&nbsp;<span>6.4</span></a>, using the same colors as <a href="#fig-shiraz-regression" class="quarto-xref">Figure&nbsp;<span>6.3</span></a> to indicate whether the observation is below, within, or above, the 95% prediction interval.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="ot">&lt;-</span> wine_aug <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">std_loo_res =</span> .resid <span class="sc">/</span> (.sigma <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> .hat)),</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">surprisals =</span> <span class="sc">-</span><span class="fu">dnorm</span>(.std.resid, <span class="at">log =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">loo_surprisals =</span> <span class="sc">-</span><span class="fu">dnorm</span>(std_loo_res, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(points, std_loo_res, loo_surprisals, location) <span class="sc">|&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">c</span>(std_loo_res, loo_surprisals), <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"value"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">variable =</span> <span class="fu">factor</span>(variable,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"std_loo_res"</span>, <span class="st">"loo_surprisals"</span>),</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">label =</span> <span class="fu">c</span>(<span class="st">"Standardized LOO residuals"</span>, <span class="st">"LOO surprisals"</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">|&gt;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> points, <span class="at">y =</span> value, <span class="at">col =</span> location)) <span class="sc">+</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(variable <span class="sc">~</span> ., <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> <span class="dv">0</span>, <span class="at">width =</span> <span class="fl">0.1</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"#666666"</span>) <span class="sc">+</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Points"</span>, <span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>, <span class="at">col =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#0072B2"</span>, <span class="st">"#D55E00"</span>, <span class="st">"#AAAAAA"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-shiraz-regression-scores" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-shiraz-regression-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-shiraz-regression-scores-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-shiraz-regression-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.4: Residuals and surprisals for the Shiraz data using a linear regression model. Points are colored to match the 95% prediction intervals in <a href="#fig-shiraz-regression" class="quarto-xref">Figure&nbsp;<span>6.3</span></a>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The over-priced wines under this model are shown in blue, while the under-priced wines are shown in orange. This shows that the most anomalous observations are the two with LOO surprisals above 17, and studentized residuals close to 6. The largest LOO surprisal is for the most over-priced wine (under this model), a 2009 Shiraz from the Henschke winery in the Eden Valley region of South Australia, with 91 points and a price of $780.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(loo_surprisals <span class="sc">==</span> <span class="fu">max</span>(loo_surprisals)) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country<span class="sc">:</span>winery, year, points, price, std_loo_res, loo_surprisals)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 9
+#&gt;   country   state  region winery  year points price std_loo_res loo_surprisals
+#&gt;   &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;          &lt;dbl&gt;
+#&gt; 1 Australia South… Eden … Hensc…  2009     91   780        6.20           20.1</code></pre>
+</div>
+</div>
+<p>The largest LOO surprisal corresponding to an under-priced wine is for the wine with the lowest residual value, with 85 points and a price of $4. Another good buy, at the higher quality end, is the 2007 Syrah from the Rulo winery in the Columbia Valley in Washington State, USA:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(points <span class="sc">&gt;</span> <span class="dv">95</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(std_loo_res <span class="sc">==</span> <span class="fu">min</span>(std_loo_res)) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country<span class="sc">:</span>winery, year, points<span class="sc">:</span>price, std_loo_res, loo_surprisals)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 9
+#&gt;   country state    region winery  year points price std_loo_res loo_surprisals
+#&gt;   &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;          &lt;dbl&gt;
+#&gt; 1 US      Washing… Colum… Rulo    2007     96    20       -2.49           4.03</code></pre>
+</div>
+</div>
+<p>This corresponds to the only orange point in <a href="#fig-shiraz-regression" class="quarto-xref">Figure&nbsp;<span>6.3</span></a> that has a point value above 95 and a price below the 95% prediction interval.</p>
+</section>
+<section id="surprisal-probabilities-1" class="level3">
+<h3 class="anchored" data-anchor-id="surprisal-probabilities-1">Surprisal probabilities</h3>
+<p>We will compute the surprisal probabilities using the empirical approximation.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>wine_aug <span class="sc">|&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">rank</span>(<span class="sc">-</span>loo_surprisals) <span class="sc">/</span> <span class="fu">NROW</span>(wine_aug)) <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country<span class="sc">:</span>winery, year, points, price, loo_surprisals, prob) <span class="sc">|&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 4,496 × 9
+#&gt;    country   state     region winery  year points price loo_surprisals    prob
+#&gt;    &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;          &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 Australia South Au… Eden … Hensc…  2009     91   780          20.1  2.22e-4
+#&gt;  2 US        Californ… Centr… Law     2013     92   750          18.3  4.45e-4
+#&gt;  3 Australia South Au… Eden … Hensc…  2010     96   820          14.4  6.67e-4
+#&gt;  4 Australia South Au… South… Penfo…  2008     98   850          12.5  8.90e-4
+#&gt;  5 Italy     Tuscany   Tosca… Tua R…  2011     89   300          11.7  1.11e-3
+#&gt;  6 Australia South Au… South… Penfo…  2010     99   850          11.5  1.33e-3
+#&gt;  7 Italy     Tuscany   Tosca… Tua R…  2013     90   300          10.7  1.67e-3
+#&gt;  8 Italy     Tuscany   Tosca… Tua R…  2012     90   300          10.7  1.67e-3
+#&gt;  9 France    Rhône Va… Côte … Domai…  2013     93   391          10.2  2.00e-3
+#&gt; 10 Australia South Au… South… Penfo…  2004     96   500           9.57 2.22e-3
+#&gt; # ℹ 4,486 more rows</code></pre>
+</div>
+</div>
+<p>Those with the ten smallest surprisal probabilities are all wines that appear to be over-priced given their points values.</p>
+<p>The preceding analysis shows the calculations of surprisal probabilities in detail. They can be more simply computed using <code>surprisals()</code> as follows.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>shiraz <span class="ot">&lt;-</span> shiraz <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">surprisals</span>(fit_wine, <span class="at">approximation =</span> <span class="st">"empirical"</span>))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>shiraz <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country<span class="sc">:</span>winery, year, points, price, prob) <span class="sc">|&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 4,496 × 8
+#&gt;    country   state           region          winery  year points price    prob
+#&gt;    &lt;chr&gt;     &lt;chr&gt;           &lt;chr&gt;           &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 Australia South Australia Eden Valley     Hensc…  2009     91   780 2.22e-4
+#&gt;  2 US        California      Central Coast   Law     2013     92   750 4.45e-4
+#&gt;  3 Australia South Australia Eden Valley     Hensc…  2010     96   820 6.67e-4
+#&gt;  4 Australia South Australia South Australia Penfo…  2008     98   850 8.90e-4
+#&gt;  5 Italy     Tuscany         Toscana         Tua R…  2011     89   300 1.11e-3
+#&gt;  6 Australia South Australia South Australia Penfo…  2010     99   850 1.33e-3
+#&gt;  7 Italy     Tuscany         Toscana         Tua R…  2013     90   300 1.67e-3
+#&gt;  8 Italy     Tuscany         Toscana         Tua R…  2012     90   300 1.67e-3
+#&gt;  9 France    Rhône Valley    Côte Rôtie      Domai…  2013     93   391 2.00e-3
+#&gt; 10 Australia South Australia South Australia Penfo…  2004     96   500 2.22e-3
+#&gt; # ℹ 4,486 more rows</code></pre>
+</div>
+</div>
+<p><a href="#fig-shiraz-surprisal" class="quarto-xref">Figure&nbsp;<span>6.5</span></a> shows the relationship between points and price, with the points colored according to the surprisal probability. The eight blue points are observations with surprisal probabilities less than 0.002.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>shiraz <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> points, <span class="at">y =</span> price, <span class="at">color =</span> prob <span class="sc">&lt;</span> <span class="fl">0.002</span>)) <span class="sc">+</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> <span class="dv">0</span>, <span class="at">width =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-shiraz-surprisal" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-shiraz-surprisal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-shiraz-surprisal-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-shiraz-surprisal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.5: Price vs points for Shiraz wines. Points are colored according to the surprisal probability. The eight blue points are observations with surprisal probabilities less than 0.002.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="gam-surprisals" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="gam-surprisals"><span class="header-section-number">6.3</span> GAM surprisals</h2>
+<p>In some applications, it is not appropriate to assume the conditional density is Gaussian, or that the relationships are linear. One useful model that allows for non-Gaussian densities, and non-linear relationships, is a generalized additive model or GAM. Under this model, the conditional density is given by <span class="citation" data-cites="Wood2017gam">(<a href="references.html#ref-Wood2017gam" role="doc-biblioref">Wood 2017</a>)</span> <span class="math display">
+  y\mid\bm{x} \sim f(\mu), \qquad \ell(\mu) = \sum_{k=1}^p g_k(x_{k}),
+</span> where <span class="math inline">\mu = \text{E}(y | \bm{x})</span> denotes the conditional mean, <span class="math inline">\ell()</span> is a link function, and each <span class="math inline">g_k</span> function is smooth. If <span class="math inline">f</span> is Normal, <span class="math inline">\ell</span> is the identity, and <span class="math inline">g_i(u) = \beta_i u</span>, then this reduces to the linear Gaussian model (<a href="#eq-gaussian-regression" class="quarto-xref">Equation&nbsp;<span>6.3</span></a>).</p>
+<p>Consider the number of “not outs” for each batter in the <code>cricket_batting</code> data set. A “not out” occurs when a batsman has not been dismissed at the end of the team’s innings. Let’s consider if there are some batters who have an unusually high proportion of not outs. The data set contains results from 91022 innings, of which 11883 were not outs. So the overall proportion of not outs is <span class="math inline">11883 / 91022 = 0.131</span>.</p>
+<p><a href="#fig-notouts" class="quarto-xref">Figure&nbsp;<span>6.6</span></a> shows the proportion of not outs for each batter as a function of the number of innings they played. The unusual patterns on the left of each plot is due to the discrete nature of the data — both the number of not outs and the number of innings must be integers. There is some overplotting that occurs due to batters having the same numbers of not-outs and innings, which results in the higher color density of the corresponding plotted points. Batters who have played only a few innings tend to have a higher proportion of not outs on average, and a higher variance, than those who have played a large number of innings.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>df_no <span class="ot">&lt;-</span> cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prop_no =</span> NotOuts <span class="sc">/</span> Innings)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>df_no <span class="sc">|&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Innings, <span class="at">y =</span> NotOuts <span class="sc">/</span> Innings)) <span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-notouts" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-notouts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-notouts-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-notouts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.6: Proportion of not outs for each batter as a function of the number of innings they played.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This suggests that we can construct a GAM for the number of not outs for each batter as a function of the number of innings they played. It is natural to use a Binomial distribution with a logit link function: <span class="math display">
+  \text{NotOuts} \mid \text{Innings} \sim \text{Binomial}(n=\text{Innings},~ p),
+</span> where <span class="math inline">p</span> denotes the probability of a batter not being dismissed in an innings, and <span class="math display">
+  \log(p / (1- p)) = g(\text{Innings})
+</span> We can fit this model using the <code>mgcv</code> package.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fit_notouts <span class="ot">&lt;-</span> mgcv<span class="sc">::</span><span class="fu">gam</span>(prop_no <span class="sc">~</span> <span class="fu">s</span>(Innings),</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> df_no,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> logit), <span class="at">weights =</span> Innings</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>notouts_aug <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">augment</span>(fit_notouts, <span class="at">data =</span> df_no, <span class="at">type.predict =</span> <span class="st">"response"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>notouts_aug <span class="sc">|&gt;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Innings, <span class="at">y =</span> prop_no)) <span class="sc">+</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> .fitted), <span class="at">color =</span> <span class="st">"#0072B2"</span>) <span class="sc">+</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">ymin =</span> .fitted <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> .se.fit,</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">ymax =</span> .fitted <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> .se.fit</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"#0072B2"</span>, <span class="at">alpha =</span> <span class="fl">0.2</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Proportion of not outs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-notouts-gam" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-notouts-gam-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-notouts-gam-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-notouts-gam-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.7: Proportion of not outs for each batter as a function of the number of innings they played, with a GAM fit using a Binomial distribution. The blue line shows the probability of a batter being not out as a function of the number of Innings they have played.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we can use the fitted model to compute the surprisals from the Binomial distribution, and find the most anomalous batters. Unfortunately, there is not a convenient way to compute LOO surprisals for GAM models, so we will only consider regular surprisals in this example. While the Binomial distribution is probably a good first approximation, it does assume that the probability of a batter being dismissed does not change over their career, which is an unlikely assumption as it does not allow for the development of skill, the value of experience, or the effect of ageing. So we will use the GPD approximation to compute the surprisal probabilities.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>notouts_aug <span class="ot">&lt;-</span> notouts_aug <span class="sc">|&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">surprisals =</span> <span class="fu">surprisals</span>(fit_notouts, <span class="at">probability =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">prob =</span> <span class="fu">surprisals</span>(fit_notouts, <span class="at">approximation =</span> <span class="st">"gpd"</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Player<span class="sc">:</span>Country, Innings<span class="sc">:</span>NotOuts, prop_no<span class="sc">:</span>.fitted, surprisals<span class="sc">:</span>prob) <span class="sc">|&gt;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(surprisals))</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>notouts_aug</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 3,702 × 8
+#&gt;    Player           Country Innings NotOuts prop_no .fitted surprisals    prob
+#&gt;    &lt;chr&gt;            &lt;chr&gt;     &lt;int&gt;   &lt;int&gt;   &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 JM Anderson      England     233      99   0.425  0.120        71.3 3.10e-4
+#&gt;  2 CS Martin        New Ze…     104      52   0.5    0.121        47.1 7.32e-4
+#&gt;  3 RGD Willis       England     128      55   0.430  0.121        40.8 9.88e-4
+#&gt;  4 CA Walsh         West I…     185      61   0.330  0.0965       40.7 9.91e-4
+#&gt;  5 TA Boult         New Ze…      86      42   0.488  0.121        37.1 1.20e-3
+#&gt;  6 M Muralitharan   ICC/Sr…     164      56   0.341  0.102        36.8 1.22e-3
+#&gt;  7 EJ Chatfield     New Ze…      54      33   0.611  0.131        36.0 1.28e-3
+#&gt;  8 BS Chandrasekhar India        80      39   0.488  0.123        34.1 1.43e-3
+#&gt;  9 GD McGrath       Austra…     138      51   0.370  0.118        31.8 1.65e-3
+#&gt; 10 M Ntini          South …     116      45   0.388  0.122        29.1 1.99e-3
+#&gt; # ℹ 3,692 more rows</code></pre>
+</div>
+</div>
+<p>The most anomalous batters are all “tail-enders” (i.e., not skilled batters) who played for a long time (so they have a large number of innings). Because they batted last, or nearly last, they are more likely to be not out at the end of the team’s innings.</p>
+<p>The <code>.fitted</code> value is the expected proportion of not outs for each player given the number of innings they have played, while <code>prop_no</code> gives the actual proportion of not outs they have had. The largest surprisal is for English batter Jimmy Anderson, who has had 99 not outs in 233 innings, which is much higher than the expected number of not outs of <span class="math inline">233 \times 0.120 = 27.9</span>. This anomaly is also seen in <a href="#fig-notouts-gam" class="quarto-xref">Figure&nbsp;<span>6.7</span></a>, as being somewhat unusual for that part of the data. Although Jimmy Anderson was not a great batter, he was good at defence, and was able to bat for a long time without being dismissed, leaving the other batter time to score runs.</p>
+<p>We have identified an anomaly that is not anomalous in the proportion of not-outs, or in the number of innings, and the difference between the actual proportion and the predicted proportion is not anomalous either compared to some of the other values. However, because we have used a statistical model, we have been able to account for the particular features of this data set, such as the discrete nature of the data, and the changing variance, to identify an observation that is anomalous in the context of the model.</p>
+</section>
+<section id="sec-kdescores" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="sec-kdescores"><span class="header-section-number">6.4</span> KDE surprisals</h2>
+<p>Suppose, instead of a regression or a GAM, we estimate <span class="math inline">f</span> using a kernel density estimate. In fact, when the <code>surprisals()</code> functions is applied to data without specifying a probability distribution, a kernel density estimate of the data is used by default. The kernel density estimate at each observation is (<a href="03-multivariate.html#eq-mkde" class="quarto-xref">Equation&nbsp;<span>3.3</span></a>) <span id="eq-kdescores"><span class="math display">
+  f_i = \hat{f}(\bm{y}_i) = \frac{1}{n} \sum_{j=1}^n K_H(\bm{y}_i-\bm{y}_j),
+\tag{6.11}</span></span> and so the “<strong>kde surprisal</strong>” at each observation as <span class="math display">
+  p_i = -\log(f_i).
+</span> The largest possible surprisal occurs when an observation has no other observations nearby. Then <span class="math inline">f_i \approx K_H(\bm{0})/n</span> because <span class="math inline">K_H(\bm{y}_i-\bm{y}_j)\approx 0</span> when <span class="math inline">\|\bm{y}_i-\bm{y}_j\|</span> is large. So the largest possible kde surprisal, when using a Gaussian kernel, is <span class="math display">
+  -\log(K_H(\bm{0})/n) \approx \log(n) + \frac{d}{2}\log(2\pi) + \frac{1}{2}\text{log det}(\bm{H}),
+</span> where <span class="math inline">\bm{H}</span> is now the bandwidth matrix. For univariate data, when <span class="math inline">d=1</span>, this simplifies to <span class="math display">
+  -\log(K_h(0)/n) \approx \log(nh\sqrt{2\pi}).
+</span></p>
+<section id="leave-one-out-kde-surprisals" class="level3">
+<h3 class="anchored" data-anchor-id="leave-one-out-kde-surprisals">Leave-one-out kde surprisals</h3>
+<p>The contribution of the <span class="math inline">i</span>th point to the kernel density estimate at that point is <span class="math inline">K_H(\bm{0})/n</span>. Therefore, we can compute leave-one-out kde surprisals as <span id="eq-lookkde"><span class="math display">
+  f_{-i} = \left[nf_i - K_H(\bm{0})\right]/(n-1),
+\tag{6.12}</span></span> where <span class="math inline">f_i</span> is the kde estimate at <span class="math inline">\bm{y}_i</span> using all data. Thus, we can compute the leave-one-out kernel surprisals without needing to re-estimate the density many times.</p>
+</section>
+<section id="sec-lookout" class="level3">
+<h3 class="anchored" data-anchor-id="sec-lookout">The lookout algorithm</h3>
+<p>The <strong>“lookout” algorithm</strong> (standing for Leave-One-Out Kernel density estimates for OUTlier detection) was proposed by <span class="citation" data-cites="lookout2021">Kandanaarachchi and Hyndman (<a href="references.html#ref-lookout2021" role="doc-biblioref">2022</a>)</span> and uses surprisal probabilities based on a GPD approximation. Unlike the KDE implementation used in this book, it uses a TDA method of bandwidth selection. Probabilities obtained using this algorithm can be calculated using the <code>lookout_prob()</code> function.</p>
+</section>
+<section id="example-old-faithful-eruption-durations" class="level3">
+<h3 class="anchored" data-anchor-id="example-old-faithful-eruption-durations">Example: Old Faithful eruption durations</h3>
+<p>For the Old Faithful eruption duration data, we obtain the following results.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>of_surprisals <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">kde_surprisal =</span> <span class="fu">surprisals</span>(duration, <span class="at">loo =</span> <span class="cn">FALSE</span>, <span class="at">probability =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">loo_kde_surprisal =</span> <span class="fu">surprisals</span>(duration, <span class="at">loo =</span> <span class="cn">TRUE</span>, <span class="at">probability =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">prob =</span> <span class="fu">surprisals</span>(duration, <span class="at">loo =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>of_surprisals <span class="sc">|&gt;</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(loo_kde_surprisal))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2,261 × 6
+#&gt;    time                duration waiting kde_surprisal loo_kde_surprisal
+#&gt;    &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;             &lt;dbl&gt;
+#&gt;  1 2015-12-07 00:09:00     7200    3420         11.0             Inf   
+#&gt;  2 2018-04-25 19:08:00        1    5700         11.0             Inf   
+#&gt;  3 2020-10-25 16:31:00      305    6060          7.62              7.66
+#&gt;  4 2015-03-07 00:50:00      160    5281          7.54              7.57
+#&gt;  5 2019-03-14 22:43:00      160    5580          7.54              7.57
+#&gt;  6 2020-09-15 18:01:00      160    5880          7.54              7.57
+#&gt;  7 2020-09-16 14:44:00      160    6120          7.54              7.57
+#&gt;  8 2020-05-07 22:55:00      304    6180          7.51              7.54
+#&gt;  9 2020-05-21 00:27:00      304    5640          7.51              7.54
+#&gt; 10 2017-09-01 01:18:00      155    4560          7.51              7.54
+#&gt; # ℹ 2,251 more rows
+#&gt; # ℹ 1 more variable: prob &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>The two infinite LOO surprisals correspond to the extreme 2 hour duration, and the tiny 1 second duration. These are so improbable given the rest of the data, that the scores are effectively infinite. The regular kde scores (with <code>loo = FALSE</code>) are at their maximum values. The <code>prob</code> column contains the surprisal probabilities using the <code>loo_kde_surprisal</code> values.</p>
+<p><a href="#fig-ofpot" class="quarto-xref">Figure&nbsp;<span>6.8</span></a> shows an HDR boxplot of the data (other than the maximum), with those points with surprisal probabilities less than 0.005 highlighted in black.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7200</span>) <span class="sc">|&gt;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_hdrboxplot</span>(duration)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-ofpot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ofpot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-ofpot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ofpot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.8: HDR boxplot of the Old Faithful eruption durations, with the surprisal anomalies highlighted in black.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="more-examples" class="level3">
+<h3 class="anchored" data-anchor-id="more-examples">More examples</h3>
+<p>Let’s apply the kde surprisals method to the six examples introduced in <a href="04-tests.html#sec-examples" class="quarto-xref"><span>Section 4.1</span></a>. For this purpose we will use a threshold of 0.001 for the surprisal probabilities.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">surprisals</span>(Average, <span class="at">loo =</span> <span class="cn">TRUE</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Player, Average, prob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 3
+#&gt;   Player     Average  prob
+#&gt;   &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 DG Bradman    99.9     0</code></pre>
+</div>
+</div>
+<p>Here Bradman is a clear anomaly (with a very low surprisal probability), and no-one else is identified as a possible anomaly.</p>
+<p>The same algorithm is easily applied in two dimensions. Here we use the <code>oldfaithful</code> data set, and consider the distribution of Duration and Waiting time, ignoring those observations that are greater than 2 hours in either dimension.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>of <span class="ot">&lt;-</span> oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(duration, waiting) <span class="sc">|&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7200</span>, waiting <span class="sc">&lt;</span> <span class="dv">7200</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">loo_scores =</span> <span class="fu">surprisals</span>(of, <span class="at">loo =</span> <span class="cn">TRUE</span>, <span class="at">probability =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">prob =</span> <span class="fu">surprisals</span>(of, <span class="at">loo =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.005</span>) <span class="sc">|&gt;</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob, duration)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 10 × 4
+#&gt;    duration waiting loo_scores    prob
+#&gt;       &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1        1    5700      Inf   0      
+#&gt;  2      120    6060      Inf   0      
+#&gt;  3      170    3600       17.6 0.00137
+#&gt;  4      170    3840       17.3 0.00182
+#&gt;  5      150    3420       16.5 0.00228
+#&gt;  6       90    4740       16.5 0.00273
+#&gt;  7      160    6120       16.4 0.00319
+#&gt;  8      186    4320       16.3 0.00364
+#&gt;  9      300    5280       16.1 0.00410
+#&gt; 10      160    5880       16.1 0.00455</code></pre>
+</div>
+</div>
+<p>Now, two anomalies are identified, with both of them having infinite LOO surprisals. We can visualize them in an HDR scatterplot, shown in <a href="#fig-ofpot2" class="quarto-xref">Figure&nbsp;<span>6.9</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>of <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_hdrboxplot</span>(duration, waiting, <span class="at">scatterplot =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-ofpot2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ofpot2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="06-density_files/figure-html/fig-ofpot2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ofpot2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.9: HDR scatterplot of the Old Faithful eruption durations and waiting times, with the surprisal anomalies highlighted in red.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Next we consider some artificial examples. First, we consider the first 48 rows of the second variable in the <code>n01</code> data, along with the values 4.0 and 4.5.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>n01b <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">c</span>(n01<span class="sc">$</span>v2[<span class="dv">1</span><span class="sc">:</span><span class="dv">48</span>], <span class="dv">4</span>, <span class="fl">4.5</span>))</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>n01b <span class="sc">|&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">surprisals</span>(y)) <span class="sc">|&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 2
+#&gt; # ℹ 2 variables: y &lt;dbl&gt;, prob &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>As expected, only the two genuine anomalies have been identified.</p>
+<p>Finally, we consider 1000 simulated observations from each of the distributions, N(0,1), <span class="math inline">\text{t}_3</span> and <span class="math inline">\chi^2_4</span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>n01 <span class="sc">|&gt;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(v1) <span class="sc">|&gt;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">surprisals</span>(v1)) <span class="sc">|&gt;</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob, v1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 2
+#&gt; # ℹ 2 variables: v1 &lt;dbl&gt;, prob &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">rt</span>(<span class="dv">1000</span>, <span class="at">df =</span> <span class="dv">3</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">surprisals</span>(y)) <span class="sc">|&gt;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 2
+#&gt; # ℹ 2 variables: y &lt;dbl&gt;, prob &lt;dbl&gt;</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">y =</span> <span class="fu">rchisq</span>(<span class="dv">1000</span>, <span class="at">df =</span> <span class="dv">4</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">prob =</span> <span class="fu">surprisals</span>(y)) <span class="sc">|&gt;</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&lt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(prob, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 0 × 2
+#&gt; # ℹ 2 variables: y &lt;dbl&gt;, prob &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>The algorithm has found a small number of spurious anomalies in each case, out of the 1000 observations included. Notably, the results do not appear to deteriorate with the heavier-tailed or skewed distributions.</p>
+</section>
+</section>
+<section id="other-density-based-methods" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="other-density-based-methods"><span class="header-section-number">6.5</span> Other density-based methods</h2>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Cover2006" class="csl-entry" role="listitem">
+Cover, Thomas M, and Joy A Thomas. 2006. <em>Elements of Information Theory</em>. 2nd ed. Hoboken, NJ: Wiley.
+</div>
+<div id="ref-faraway2004linear" class="csl-entry" role="listitem">
+Faraway, J J. 2014. <em>Linear Models with r</em>. 2nd ed. Chapman; Hall/CRC.
+</div>
+<div id="ref-Gneiting2014" class="csl-entry" role="listitem">
+Gneiting, T, and M Katzfuss. 2014. <span>“Probabilistic Forecasting.”</span> <em>Annual Review of Statistics and Its Application</em> 1 (1): 125–51. <a href="https://doi.org/10.1146/annurev-statistics-062713-085831">https://doi.org/10.1146/annurev-statistics-062713-085831</a>.
+</div>
+<div id="ref-lookout2021" class="csl-entry" role="listitem">
+Kandanaarachchi, S, and R J Hyndman. 2022. <span>“Leave-One-Out Kernel Density Estimates for Outlier Detection.”</span> <em>J Computational &amp; Graphical Statistics</em> 31 (2): 586–99. <a href="https://doi.org/10.1080/10618600.2021.2000425">https://doi.org/10.1080/10618600.2021.2000425</a>.
+</div>
+<div id="ref-Montgomery2012" class="csl-entry" role="listitem">
+Montgomery, Douglas C, Elizabeth A Peck, and G Geoffrey Vining. 2012. <em>Introduction to Linear Regression Analysis</em>. 5th ed. John Wiley &amp; Sons.
+</div>
+<div id="ref-seberlee2003" class="csl-entry" role="listitem">
+Seber, George A F, and Alan J Lee. 2003. <em>Linear Regression Analysis</em>. 2nd ed. John Wiley &amp; Sons.
+</div>
+<div id="ref-Stone2022" class="csl-entry" role="listitem">
+Stone, James V. 2022. <em>Information Theory: A Tutorial Introduction</em>. Sheffield, England: Sebtel Press.
+</div>
+<div id="ref-Tribus1961" class="csl-entry" role="listitem">
+Tribus, Myron. 1961. <em>Thermodynamics and Thermostatics: An Introduction to Energy, Information and States of Matter, with Engineering Applications</em>. New York, USA: D. Van Nostrand.
+</div>
+<div id="ref-Wood2017gam" class="csl-entry" role="listitem">
+Wood, S N. 2017. <em>Generalized Additive Models: An Introduction with <span>R</span></em>. CRC press.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/OTexts\.com\/weird");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./05-boxplots.html" class="pagination-link" aria-label="Boxplots">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./07-distance.html" class="pagination-link" aria-label="Distance-based methods">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Published by OTexts using <a href="https://quarto.org">Quarto</a>. <i class="fa-solid fa-copyright" aria-label="copyright"></i> <a href="https://robjhyndman.com">Rob J Hyndman</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

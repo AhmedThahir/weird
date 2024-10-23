@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1&nbsp; Introduction – That's weird! Anomaly&nbsp;detection using&nbsp;R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./02-univariate.html" rel="next">
+<link href="./index.html" rel="prev">
+<link href="./favicon.ico" rel="icon">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./01-intro.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">That’s weird! Anomaly&nbsp;detection using&nbsp;R</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-univariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-multivariate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Multivariate probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Statistical tests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-boxplots.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Boxplots</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-density.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Density-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-distance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Distance-based methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">High-dimensional methods</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time series data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-functional.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Functional data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-network.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Network and graph data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-imagevideo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image and video data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-text.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Categorical and textual data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Spaces of probability distributions</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-cybersecurity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Network intrusions and fraud</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bibliography</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix algebra</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title"><b>Sections</b></h2>
+   
+  <ul>
+  <li><a href="#definitions" id="toc-definitions" class="nav-link active" data-scroll-target="#definitions"><span class="header-section-number">1.1</span> Definitions</a>
+  <ul class="collapse">
+  <li><a href="#rejecting-anomalies" id="toc-rejecting-anomalies" class="nav-link" data-scroll-target="#rejecting-anomalies">Rejecting anomalies</a></li>
+  <li><a href="#how-nasa-didnt-discover-the-hole-in-the-ozone-layer" id="toc-how-nasa-didnt-discover-the-hole-in-the-ozone-layer" class="nav-link" data-scroll-target="#how-nasa-didnt-discover-the-hole-in-the-ozone-layer">How NASA didn’t discover the hole in the ozone layer</a></li>
+  </ul></li>
+  <li><a href="#approaches-to-anomaly-detection" id="toc-approaches-to-anomaly-detection" class="nav-link" data-scroll-target="#approaches-to-anomaly-detection"><span class="header-section-number">1.2</span> Approaches to anomaly detection</a>
+  <ul class="collapse">
+  <li><a href="#z-scores-and-statistical-tests" id="toc-z-scores-and-statistical-tests" class="nav-link" data-scroll-target="#z-scores-and-statistical-tests">Z-scores and statistical tests</a></li>
+  <li><a href="#boxplot-methods" id="toc-boxplot-methods" class="nav-link" data-scroll-target="#boxplot-methods">Boxplot methods</a></li>
+  <li><a href="#distance-and-density-based-methods" id="toc-distance-and-density-based-methods" class="nav-link" data-scroll-target="#distance-and-density-based-methods">Distance and density-based methods</a></li>
+  <li><a href="#statistical-vs-machine-learning-approaches" id="toc-statistical-vs-machine-learning-approaches" class="nav-link" data-scroll-target="#statistical-vs-machine-learning-approaches">Statistical vs machine learning approaches</a></li>
+  <li><a href="#supervised-vs-unsupervised-approaches" id="toc-supervised-vs-unsupervised-approaches" class="nav-link" data-scroll-target="#supervised-vs-unsupervised-approaches">Supervised vs unsupervised approaches</a></li>
+  <li><a href="#testing-anomaly-detection-algorithms" id="toc-testing-anomaly-detection-algorithms" class="nav-link" data-scroll-target="#testing-anomaly-detection-algorithms">Testing anomaly detection algorithms</a></li>
+  </ul></li>
+  <li><a href="#spurious-anomalies-and-undetected-anomalies" id="toc-spurious-anomalies-and-undetected-anomalies" class="nav-link" data-scroll-target="#spurious-anomalies-and-undetected-anomalies"><span class="header-section-number">1.3</span> Spurious anomalies and undetected anomalies</a></li>
+  <li><a href="#sec-data" id="toc-sec-data" class="nav-link" data-scroll-target="#sec-data"><span class="header-section-number">1.4</span> Data sets</a>
+  <ul class="collapse">
+  <li><a href="#test-cricket-batting-data" id="toc-test-cricket-batting-data" class="nav-link" data-scroll-target="#test-cricket-batting-data">Test cricket batting data</a></li>
+  <li><a href="#old-faithful-geyser-eruptions" id="toc-old-faithful-geyser-eruptions" class="nav-link" data-scroll-target="#old-faithful-geyser-eruptions">Old Faithful Geyser eruptions</a></li>
+  <li><a href="#wine-prices-and-quality" id="toc-wine-prices-and-quality" class="nav-link" data-scroll-target="#wine-prices-and-quality">Wine prices and quality</a></li>
+  <li><a href="#synthetic-standard-normal-data" id="toc-synthetic-standard-normal-data" class="nav-link" data-scroll-target="#synthetic-standard-normal-data">Synthetic standard normal data</a></li>
+  </ul></li>
+  <li><a href="#sec-scatterplots" id="toc-sec-scatterplots" class="nav-link" data-scroll-target="#sec-scatterplots"><span class="header-section-number">1.5</span> Strip plots and scatterplots</a>
+  <ul class="collapse">
+  <li><a href="#example-don-bradmans-batting-averages" id="toc-example-don-bradmans-batting-averages" class="nav-link" data-scroll-target="#example-don-bradmans-batting-averages">Example: Don Bradman’s batting averages</a></li>
+  <li><a href="#example-old-faithful-eruption-durations" id="toc-example-old-faithful-eruption-durations" class="nav-link" data-scroll-target="#example-old-faithful-eruption-durations">Example: Old Faithful eruption durations</a></li>
+  <li><a href="#example-wine-prices-and-quality" id="toc-example-wine-prices-and-quality" class="nav-link" data-scroll-target="#example-wine-prices-and-quality">Example: Wine prices and quality</a></li>
+  <li><a href="#example-synthetic-standard-normal-data" id="toc-example-synthetic-standard-normal-data" class="nav-link" data-scroll-target="#example-synthetic-standard-normal-data">Example: Synthetic standard normal data</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-27933797-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-27933797-2');
+  gtag('config', 'G-JKBLG3XQGY')
+</script>
+<link href="https://fonts.googleapis.com/css?family=Fira+Sans|Noto+Serif" rel="stylesheet">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack-subset.css">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-intro" class="quarto-section-identifier"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Data analysis is about finding the stories hidden in the mass of information that make up a data set. Usually we are interested in understanding the major patterns — the relationships that hold true for most of the data. But sometimes we need to look at the weird observations — those that don’t follow the crowd and behave differently. We call these weird observations “anomalies”. They are the mavericks in the data, and in this book, they are what we find interesting.</p>
+<p>Anomalies are often a nuisance. For example, they may be simply recording errors that are contaminating our data. We want to find them, remove them, and get on with analysing the bulk of the data. At other times, anomalies are the observations we care about. They tell us things that might otherwise go unnoticed if we only consider how the majority of observations behave. Whether we want to remove them or study them, we first need to find them.</p>
+<section id="definitions" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="definitions"><span class="header-section-number">1.1</span> Definitions</h2>
+<p>An anomaly is an observation that behaves differently from the bulk of the data. Anomalies are also called “outliers”, “novelties”, “deviants”, “abnormalities” or “discordants”. I prefer to use “anomalies” as it is a more general term than outliers, and it is more widely used than the other options.</p>
+<p>An old definition due to <span class="citation" data-cites="Barnett1978">Barnett and Lewis (<a href="references.html#ref-Barnett1978" role="doc-biblioref">1978</a>)</span> states</p>
+<blockquote class="blockquote">
+<p>an outlier in a set of data [is] an observation (or subset of observations) which appears to be inconsistent with the remainder of that set of data.</p>
+</blockquote>
+<p><span class="citation" data-cites="Hawkins1980">Hawkins (<a href="references.html#ref-Hawkins1980" role="doc-biblioref">1980</a>)</span> defined it like this:</p>
+<blockquote class="blockquote">
+<p>An outlier is an observation which deviates so much from the other observations as to arouse suspicions that it was generated by a different mechanism.</p>
+</blockquote>
+<p>A more mathematical definition is that anomalies are observations that come from a different probability distribution than the majority of observations. However, that does not help much as it is always possible to define a mixture probability distribution which includes several component distributions. There are also some probability distributions with “heavy tails”, so genuine observations can occur a long way from the bulk of the data.</p>
+<p>So rather than trying to define anomalies more precisely, we shall deliberately proceed with the vague and subjective approach where anomalies are suspiciously different or inconsistent with the rest of the data.</p>
+<p>I will sometimes use the term “outlier” to mean an anomaly that lies at the outer edges of a data set. Other anomalies are actually “inliers”, and lie well within the data set. Some papers use the term “inlier” to denote any point that is not an outlier. However, we shall use the earlier definition of “inlier”, meaning an observation that is an anomaly but which is surrounded by genuine observations.</p>
+<section id="rejecting-anomalies" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="rejecting-anomalies">Rejecting anomalies</h3>
+<p>Many analysts have thrown away apparent anomalies because they were assumed to be errors. There are even formal statistical tests to tell you which observations should be ignored. In my view, this is a dangerous practice. No anomalies should be removed unless you understand what led to their unusual behaviour in the first place. Often the most interesting observations are the ones that appear anomalous. They are the ones that tell us something new and unexpected, so we should not be too quick to reject them.</p>
+<p>Sometimes we may want to use methods that are robust to anomalies, so that we can ignore them without worrying about their effect on the analysis. But this is not the same as removing them. Even when we use robust methods, it is still worth investigating any observations that appear anomalous, in order to fully understand the variation in the data.</p>
+</section>
+<section id="how-nasa-didnt-discover-the-hole-in-the-ozone-layer" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="how-nasa-didnt-discover-the-hole-in-the-ozone-layer">How NASA didn’t discover the hole in the ozone layer</h3>
+<p>There is a widespread myth that NASA did not discover the hole in the ozone layer above the Antarctic because they had been throwing away anomalous data that would have revealed it. This is not true, but the real story is also instructive <span class="citation" data-cites="Pukelsheim1990 Christie2001 christie2004data">(<a href="references.html#ref-Pukelsheim1990" role="doc-biblioref">Pukelsheim 1990</a>; <a href="references.html#ref-Christie2001" role="doc-biblioref">Christie 2001</a>, <a href="references.html#ref-christie2004data" role="doc-biblioref">2004</a>)</span>.</p>
+<p>The “ozone hole” refers to low levels of ozone in the atmosphere above Antarctica and surrounding areas. NASA have been collecting satellite data on Antarctic ozone levels using a Total Ozone Mapping Spectrometer (TOMS) since 1979, while British scientists have collected ozone data using ground sensors at the Halley Research Station, on the edge of the Brunt Ice Shelf in Antarctica, since 1957. <a href="#fig-halley" class="quarto-xref">Figure&nbsp;<span>1.1</span></a> shows average daily values from the NASA measurements in blue, and from the British observations in orange. There is a clear downward trend in the British data, especially from the late 1970s, which is confirmed with the NASA data. So why wasn’t the “ozone hole” discovered until 1985?</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tmp <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data/halley_toms_ozone.txt"</span>), <span class="at">skip =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">Year =</span> <span class="st">"#   year"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Instrument =</span> <span class="st">"instrument"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ozone =</span> <span class="st">"ozone"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>ozone <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  tmp <span class="sc">|&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Instrument)),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  tmp <span class="sc">|&gt;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="fu">is.na</span>(Instrument), <span class="sc">!</span>stringr<span class="sc">::</span><span class="fu">str_detect</span>(Year, <span class="st">"^#"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Instrument =</span> <span class="st">"Halley"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">Year =</span> readr<span class="sc">::</span><span class="fu">parse_integer</span>(Year),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">Ozone =</span> readr<span class="sc">::</span><span class="fu">parse_number</span>(Ozone)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>ozone <span class="sc">|&gt;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Instrument <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Halley"</span>, <span class="st">"TOMS"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Ozone, <span class="at">color =</span> Instrument)) <span class="sc">+</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> <span class="dv">180</span>), <span class="at">col =</span> <span class="st">"gray"</span>) <span class="sc">+</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Total Ozone (DU)"</span>) <span class="sc">+</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">sec.axis =</span> <span class="fu">dup_axis</span>(<span class="at">breaks =</span> <span class="dv">180</span>, <span class="at">name =</span> <span class="st">""</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-halley" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-halley-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-halley-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-halley-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.1: Observations of Antarctic ozone levels since 1957, measured in Dobson units (DU). Observations are mean daily values from October each year. Ground observations are from Halley Research Station, while satellite observations were obtained using a Total Ozone Mapping Spectrometer (TOMS). The satellite data were obtained from <a href="https://ozonewatch.gsfc.nasa.gov/facts/history_SH.html">Leslie R Lait (NASA)</a>, while the Halley ground observations were obtained from <a href="https://www.antarctica.ac.uk/met/jds/ozone/">Jonathan Shanklin (British Antarctic Survey)</a>. The horizontal line shows the threshold of 180 DU, used by NASA to determine when the ozone level was unusually low.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The British scientists had noticed the low ozone values as early as 1981, but it took a few years for the scientists to be convinced that the low values were real and not due to instrument problems, and then there were the usual publication delays. Eventually, the results were published in <span class="citation" data-cites="Farman1985">Farman, Gardiner, and Shanklin (<a href="references.html#ref-Farman1985" role="doc-biblioref">1985</a>)</span>.</p>
+<p>Meanwhile, NASA was flagging observations as anomalous when they were below 180 DU (shown as a horizontal line in <a href="#fig-halley" class="quarto-xref">Figure&nbsp;<span>1.1</span></a>). As is clear from the figure, this is much lower than any of the plotted points before the early 1980s. However, the 180 threshold was used for the <em>daily</em> measurements, which are much more variable than the monthly averages that are plotted. Occasionally daily observations did fall below 180, and so it was a reasonable threshold for the purpose of identifying instrument problems.</p>
+<p>In fact, NASA had checked the unusually low TOMS values obtained before 1985 by comparing them against other available data. But the other data available to them showed ozone values of about 300 DU, so it was assumed that the satellite sensor was malfunctioning. The British Halley data were not available to them, and only after the publication of <span class="citation" data-cites="Farman1985">Farman, Gardiner, and Shanklin (<a href="references.html#ref-Farman1985" role="doc-biblioref">1985</a>)</span> did the NASA scientists realise that the TOMS results were accurate.</p>
+<p>In 1986, NASA scientists were able to confirm the British finding, also demonstrating that the ozone hole was widespread across the Antarctic <span class="citation" data-cites="stolarski1986nimbus">(<a href="references.html#ref-stolarski1986nimbus" role="doc-biblioref">Stolarski et al. 1986</a>)</span>.</p>
+<p>This example reveals some lessons about anomaly detection:</p>
+<ul>
+<li>The NASA threshold of 180 was based on daily data, and was designed to identify instrument problems, not genuine systematic changes in ozone levels. The implicit assumption was that ozone levels varied seasonally, but that otherwise the distribution of observations was stable. All anomaly detection involves some implicit assumptions like this, and it is well to be aware of them.</li>
+<li>Sometimes what we think are anomalies are not really anomalies, but the result of incorrect assumptions.</li>
+<li>Often smoothing or averaging data will help to reveal issues that are not so obvious from the original data. This reduces the variation in the data, and allows more systematic variation to be uncovered.</li>
+<li>Always plot the data. In this case, a graph such as <a href="#fig-halley" class="quarto-xref">Figure&nbsp;<span>1.1</span></a> would have revealed the problem in the late 1970s, but it seems no-one was producing plots like this.</li>
+</ul>
+</section>
+</section>
+<section id="approaches-to-anomaly-detection" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="approaches-to-anomaly-detection"><span class="header-section-number">1.2</span> Approaches to anomaly detection</h2>
+<p>We will take a probabilistic perspective on anomaly detection, where we aim to estimate the likelihood of each observation. Consequently, we will need to introduce (or revise) some material on probability distributions and related tools in <a href="02-univariate.html" class="quarto-xref"><span>Chapter 2</span></a> and <a href="03-multivariate.html" class="quarto-xref"><span>Chapter 3</span></a>.</p>
+<section id="z-scores-and-statistical-tests" class="level3">
+<h3 class="anchored" data-anchor-id="z-scores-and-statistical-tests">Z-scores and statistical tests</h3>
+<p>The early days of anomaly detection involved methods based on statistical tests. Typically, the data were assumed to come from some underlying probability distribution, and then observations were declared outliers if they appeared to be inconsistent with this assumption. By far the most popular of these methods are based on the Normal distribution and use z-scores. Even today, such methods are extremely widely used. These are discussed in <a href="04-tests.html" class="quarto-xref"><span>Chapter 4</span></a>.</p>
+</section>
+<section id="boxplot-methods" class="level3">
+<h3 class="anchored" data-anchor-id="boxplot-methods">Boxplot methods</h3>
+<p>The second half of the 20th century witnessed the advent of computing, which allowed more sophisticated exploratory data analysis to be developed, including boxplots. Most readers will be familiar with boxplots, which provide a simple and effective way to visualise the distribution of a variable, and are often also used for anomaly detection. Such methods are discussed in <a href="05-boxplots.html" class="quarto-xref"><span>Chapter 5</span></a>.</p>
+</section>
+<section id="distance-and-density-based-methods" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="distance-and-density-based-methods">Distance and density-based methods</h3>
+<p>Modern tools for anomaly detection can be roughly divided into two groups: those based on densities and those based on distances. Distance-based tools compute the pairwise distances between observations and identify anomalies as those points that are far from other points. Density-based tools compute the probability density at each observation and identify anomalies as those points with very low density. The two ideas are closely related because density estimates are usually based on distances to other observations; for example, a density estimate at a point may be a function of the distances between that point and all other observations.</p>
+<p>Density-based methods are discussed in <a href="06-density.html" class="quarto-xref"><span>Chapter 6</span></a>, while distance-based methods are the subject of <a href="07-distance.html" class="quarto-xref"><span>Chapter 7</span></a>.</p>
+</section>
+<section id="statistical-vs-machine-learning-approaches" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="statistical-vs-machine-learning-approaches">Statistical vs machine learning approaches</h3>
+<p>Anomaly detection has a long history in the statistics literature, including all of the approaches developed in the 20th century, and many of the newer density-based approaches.</p>
+<p>Recently, computer scientists have turned their attention to the problem of anomaly detection, especially as data sets have grown in size and complexity. Anomaly detection arises in cyber security systems (where intrusions are identified as anomalies), in credit-card fraud (where unusual buying patterns are anomalous) and in remote sensing (where unusual changes in land use are anomalies). Machine-learning approaches have been developed to address these problems, mostly using distanced-based methods, although some important contributions to the density-based methods have also appeared in the machine learning literature.</p>
+<p>In this book, I make no attempt to distinguish methods as “statistical” or “machine-learning”. The distinction is largely about the training of the researchers, or the journals in which they publish, and has little to do with the methods themselves. In any case, the two communities have been slowly moving closer together, with computer scientists taking a more probabilistic perspective than previously, and statisticians taking a more computational and algorithmic approach than their forebears. Now there is now considerable interaction and overlap between these communities, and continuing to label methods as “statistical” or “machine-learning” is unhelpful.</p>
+</section>
+<section id="supervised-vs-unsupervised-approaches" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="supervised-vs-unsupervised-approaches">Supervised vs unsupervised approaches</h3>
+<p>Some books and papers distinguish “supervised anomaly detection” from “unsupervised anomaly detection”. In the former case, anomalies are identified using human input and then a model or algorithm is employed to learn how to identify new anomalies contained within new data. I do not regard this as anomaly detection and it will not be covered in this book. It is possible, for example, that what a human labels as “anomalous” is not anomalous in a statistical sense. What is called “supervised anomaly detection” is actually a classification problem, where the aim is to mimic the human who labelled the training set. In that case, different tools are employed.</p>
+<p>In this book, we will only consider unsupervised problems. That is, we have no idea <em>a priori</em> what observations are anomalous, and there is no “right” answer.</p>
+</section>
+<section id="testing-anomaly-detection-algorithms" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="testing-anomaly-detection-algorithms">Testing anomaly detection algorithms</h3>
+<p>That makes it difficult to measure how good an anomaly detection algorithm performs. If we don’t know the right answer, we can’t know if an algorithm has found the true anomalies. There are three solutions to this problem that are often employed when testing anomaly detection algorithms.</p>
+<ol type="1">
+<li><strong>Synthetic data</strong>: We can use synthetic data that has been deliberately contaminated with a small number of known anomalies. This approach allows us to study the sensitivity of an algorithm to anomalies — how anomalous does an observation have to be before it is detected? A drawback to this approach is that synthetic data is often simpler and neater than real data, making the anomaly detection task easier than it is in reality.</li>
+<li><strong>Human labelled</strong>: We can use real data where a human has labelled some of the observations as anomalous. As noted above, this only works when the human has correctly and completely labelled the anomalies. It also requires that what a human considers an anomaly is also anomalous in a statistical sense.</li>
+<li><strong>Downsampled category</strong>: We can use real data that contains a categorical variable taking two label values. One of the labelled categories is downsampled and the corresponding observations form the anomalous subset. This approach is useful in obtaining large sets of realistic data, as it takes little time to create the data set. However, it requires that the observations labelled anomalies are different in some way from the other observations (apart from their label).</li>
+</ol>
+<p>In this book, we will use data sets of each type when testing different anomaly detection methods. <a href="#sec-data" class="quarto-xref"><span>Section 1.4</span></a> discusses the main examples we will be using throughout the book.</p>
+</section>
+</section>
+<section id="spurious-anomalies-and-undetected-anomalies" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="spurious-anomalies-and-undetected-anomalies"><span class="header-section-number">1.3</span> Spurious anomalies and undetected anomalies</h2>
+<p>Spurious anomalies occur when a true observation is identified as anomalous, while undetected anomalies occur when an anomalous observation is not detected. Thus, when our purpose is anomaly detection, an undetected anomaly is a “false negative” while a spurious anomaly is a “false positive”. We can only really be sure about which observations are spurious or undetected anomalies when the data are synthetic. However, in some real data examples, there are such extreme anomalies that we will proceed under the assumption that we know that these are true anomalies.</p>
+<p>In some applications, we will be less interested in detecting anomalies than in ranking observations according to their degree of “anomalousness”. For example, we may have a limited team of human analysts who can investigate a small number of observations, and we want to make sure that they investigate the most anomalous observations. Then it is important to compute an anomaly score, so we can rank the observations according to their scores, and our analysts can look at the observations with the highest scores.</p>
+<p>In fact, anomaly scores often underpin the algorithms that are used to detect anomalies. The algorithms compute a score for each observation, and then identify the observations with scores above some threshold as the anomalies. So we will often be talking about anomaly scores, even when we are really interested in detecting anomalies.</p>
+</section>
+<section id="sec-data" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="sec-data"><span class="header-section-number">1.4</span> Data sets</h2>
+<section id="test-cricket-batting-data" class="level3">
+<h3 class="anchored" data-anchor-id="test-cricket-batting-data">Test cricket batting data</h3>
+<p>Cricket is a popular sport in England, India, Australia, and other countries which had strong ties to England during the 19th and 20th centuries. The <code>cricket_batting</code> data contains summary statistics for all 3754 men and women to have played test cricket (the traditional and long form of the game), up to 6 October 2021. Each row contains data on one player, and we will be looking for anomalies in their playing statistics.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cricket_batting</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 3,754 × 15
+#&gt;    Player       Country   Start   End Matches Innings NotOuts  Runs HighScore
+#&gt;    &lt;chr&gt;        &lt;chr&gt;     &lt;int&gt; &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt; &lt;int&gt;     &lt;dbl&gt;
+#&gt;  1 BB Cooper    Australia  1877  1877       1       2       0    18        15
+#&gt;  2 C Bannerman  Australia  1877  1879       3       6       2   239       165
+#&gt;  3 DW Gregory   Australia  1877  1879       3       5       2    60        43
+#&gt;  4 EJ Gregory   Australia  1877  1877       1       2       0    11        11
+#&gt;  5 FR Spofforth Australia  1877  1887      18      29       6   217        50
+#&gt;  6 JM Blackham  Australia  1877  1894      35      62      11   800        74
+#&gt;  7 JR Hodges    Australia  1877  1877       2       4       1    10         8
+#&gt;  8 NFD Thomson  Australia  1877  1877       2       4       0    67        41
+#&gt;  9 TJD Kelly    Australia  1877  1879       2       3       0    64        35
+#&gt; 10 TK Kendall   Australia  1877  1877       2       4       1    39        17
+#&gt; # ℹ 3,744 more rows
+#&gt; # ℹ 6 more variables: HighScoreNotOut &lt;lgl&gt;, Average &lt;dbl&gt;, Hundreds &lt;int&gt;,
+#&gt; #   Fifties &lt;int&gt;, Ducks &lt;int&gt;, Gender &lt;chr&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="old-faithful-geyser-eruptions" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="old-faithful-geyser-eruptions">Old Faithful Geyser eruptions</h3>
+<p>Data on the eruptions of the Old Faithful Geyser in Yellowstone National Park, Wyoming, USA, have been collected for about 150 years. It was named “Old Faithful” due to the relatively predictable timing and length of its eruptions. The <code>oldfaithful</code> data set contains data on all 2261 eruptions recorded between 1 January 2015 and 1 October 2021.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>oldfaithful</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2,261 × 3
+#&gt;    time                duration waiting
+#&gt;    &lt;dttm&gt;                 &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 2015-01-02 14:53:00      271    5040
+#&gt;  2 2015-01-09 23:55:00      247    6060
+#&gt;  3 2015-02-07 00:49:00      203    5460
+#&gt;  4 2015-02-14 01:09:00      195    5221
+#&gt;  5 2015-02-21 01:12:00      210    5401
+#&gt;  6 2015-02-28 01:11:00      185    5520
+#&gt;  7 2015-03-07 00:50:00      160    5281
+#&gt;  8 2015-03-13 21:57:00      226    6000
+#&gt;  9 2015-03-13 23:37:00      190    5341
+#&gt; 10 2015-03-20 22:26:00      102    3961
+#&gt; # ℹ 2,251 more rows</code></pre>
+</div>
+</div>
+<p>The time stamp indicates the start time of each eruption, with the other variables providing the duration of each eruption and the time to the next eruption (both in seconds).</p>
+</section>
+<section id="wine-prices-and-quality" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="wine-prices-and-quality">Wine prices and quality</h3>
+<p>The <code>wine_reviews</code> data set contains data on 110,203 wines from 44 countries, taken from the <em>Wine Enthusiast Magazine</em> during the week of 15 June 2017.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>wine_reviews <span class="ot">&lt;-</span> <span class="fu">fetch_wine_reviews</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wine_reviews</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 110,203 × 8
+#&gt;    country  state             region         winery variety points price  year
+#&gt;    &lt;chr&gt;    &lt;chr&gt;             &lt;chr&gt;          &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1 Portugal Douro             &lt;NA&gt;           Quint… Portug…     87    15  2011
+#&gt;  2 US       Oregon            Willamette Va… Rains… Pinot …     87    14  2013
+#&gt;  3 US       Michigan          Lake Michigan… St. J… Riesli…     87    13  2013
+#&gt;  4 US       Oregon            Willamette Va… Sweet… Pinot …     87    65  2012
+#&gt;  5 Spain    Northern Spain    Navarra        Tandem Tempra…     87    15  2011
+#&gt;  6 Italy    Sicily &amp; Sardinia Vittoria       Terre… Frappa…     87    16  2013
+#&gt;  7 France   Alsace            Alsace         Trimb… Gewürz…     87    24  2012
+#&gt;  8 Germany  Rheinhessen       &lt;NA&gt;           Heinz… Gewürz…     87    12  2013
+#&gt;  9 France   Alsace            Alsace         Jean-… Pinot …     87    27  2012
+#&gt; 10 US       California        Napa           Kirkl… Cabern…     87    19  2011
+#&gt; # ℹ 110,193 more rows</code></pre>
+</div>
+</div>
+<p>The <code>points</code> variable provides a measure of wine quality based on a taster’s assessment on a scale of 0 to 100. The price is provided in $US. Other variables indicate the location of the winery and year of harvest.</p>
+</section>
+<section id="synthetic-standard-normal-data" class="level3">
+<h3 class="anchored" data-anchor-id="synthetic-standard-normal-data">Synthetic standard normal data</h3>
+<p>The <code>n01</code> data set contains synthetic data on 10 variables, each generated independently from a Normal distribution with mean zero and variance one. So by definition, this data set contains no anomalies. We will add anomalies to the data when testing algorithms, in order to check that the algorithms can identify the artificial anomalies.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>n01</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1,000 × 10
+#&gt;        v1      v2      v3      v4     v5     v6      v7     v8     v9     v10
+#&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+#&gt;  1 -0.626  1.13   -0.886   0.739  -1.13  -1.52  -0.619  -1.33   0.264 -1.22  
+#&gt;  2  0.184  1.11   -1.92    0.387   0.765  0.629 -1.11    0.952 -0.829 -0.946 
+#&gt;  3 -0.836 -0.871   1.62    1.30    0.571 -1.68  -2.17    0.860 -1.46   0.0914
+#&gt;  4  1.60   0.211   0.519  -0.804  -1.35   1.18  -0.0313  1.06   1.68   0.701 
+#&gt;  5  0.330  0.0694 -0.0558 -1.60   -2.03   1.12  -0.260  -0.351 -1.54   0.673 
+#&gt;  6 -0.820 -1.66    0.696   0.933   0.590 -1.24   0.534  -0.131 -0.191  1.27  
+#&gt;  7  0.487  0.811   0.0535  1.81   -1.41  -1.23  -0.559   0.764  1.02  -1.45  
+#&gt;  8  0.738 -1.91   -1.31   -0.0565  1.61   0.598  1.61   -0.494  0.547  1.42  
+#&gt;  9  0.576 -1.25   -2.12    1.89    1.84   0.299  0.557   1.11   0.755 -1.59  
+#&gt; 10 -0.305  0.998  -0.208   1.58    1.37  -0.110  0.186   1.46  -0.420  0.246 
+#&gt; # ℹ 990 more rows</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-scatterplots" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="sec-scatterplots"><span class="header-section-number">1.5</span> Strip plots and scatterplots</h2>
+<p>When there are no more than a few thousand observations, and only one or two variables, it is useful to start with simple plots that allow us to look at the observations directly with no processing or modelling to hide what is going on.</p>
+<p>Let’s start with some examples using only one or two variables. These examples will be revisited in the next couple of chapters as we introduce new anomaly detection tools and graphics.</p>
+<section id="example-don-bradmans-batting-averages" class="level3">
+<h3 class="anchored" data-anchor-id="example-don-bradmans-batting-averages">Example: Don Bradman’s batting averages</h3>
+<p>Don Bradman was an Australian cricketer in the first half of the 20th century, and is renowned as the best batter to ever play the game. The most common measure of a batter’s ability is their career average — the total number of runs made divided by the number of times they were dismissed. <a href="#fig-cricket1" class="quarto-xref">Figure&nbsp;<span>1.2</span></a> shows a strip plot of the career averages for all 1138 men and women to have played test cricket and batted more than 20 times.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cricket_batting <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Innings <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Average, <span class="at">y =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>() <span class="sc">+</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>, <span class="at">x =</span> <span class="st">"Career batting average"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-cricket1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cricket1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-cricket1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cricket1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.2: Career batting averages for all men and women to have played test cricket and batted more than 20 times. The anomaly is Don Bradman, who averaged 99.94 over his career.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The points are “jittered” vertically to reduce overplotting, and made slightly transparent to show where overplotting occurs. There is an obvious anomaly on the right of the plot; this point is Don Bradman who averaged 99.94 over his career. Clearly, Don Bradman was much better than any of the other men and women who have played test cricket.</p>
+</section>
+<section id="example-old-faithful-eruption-durations" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="example-old-faithful-eruption-durations">Example: Old Faithful eruption durations</h3>
+<p>Some anomalies are not so obvious, and occur within the range of the rest of the data. A good example of this is the duration of eruptions of the Old Faithful Geyser. <a href="#fig-oldfaithful1" class="quarto-xref">Figure&nbsp;<span>1.3</span></a> shows the duration of all eruptions in the data set.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration, <span class="at">y =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>, <span class="at">x =</span> <span class="st">"Duration (seconds)"</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-oldfaithful1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithful1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-oldfaithful1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithful1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.3: Old Faithful eruption durations since 2015. The large anomaly is an eruption recorded on 7&nbsp;December 2015 which apparently lasted nearly two hours.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The big anomaly on the right was an eruption recorded as lasting nearly two hours on 7 December 2015. (I can find no record of this in any news media, so perhaps it is an error in the data.) This makes it difficult to see any detail in the rest of the data, so let’s omit it so we can look at the remaining data more clearly.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7000</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration, <span class="at">y =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">""</span>, <span class="at">x =</span> <span class="st">"Duration (seconds)"</span>) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_discrete</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-oldfaithful2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithful2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-oldfaithful2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithful2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.4: Old Faithful eruption durations since 2015, omitting the one eruption that lasted nearly two hours.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>We see that almost all of the remaining eruptions were between 100 and 300 seconds in length, with one extremely short anomalous duration of 1 second. (Again, perhaps this is an error in the recorded data.) However, the plot reveals another feature of the data. The majority of observations are between 200 and 300 seconds, with a smaller group at around 120 seconds. Few observations fall between 140 and 180 seconds. Those that do can be considered “inliers” — anomalous points that lie within the range of the rest of the data but in regions of low density.</p>
+<p>The two clusters of observations characterise two eruption modes for the Old Faithful geyser: short durations (around 2 minutes in length) and long durations (between 3 and 5 minutes in length). There was an earthquake in 1998 which changed the distribution of durations. Before 1998, the durations were more evenly split between the two clusters, but currently the long durations are much more common.</p>
+<p>The <code>oldfaithful</code> data set also contains the time between eruptions. For each row, <code>waiting</code> gives the time to the <em>following</em> eruption. This is used to predict when the next eruption will happen, based on the duration of the most recent eruption.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>oldfaithful <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(duration <span class="sc">&lt;</span> <span class="dv">7200</span>, waiting <span class="sc">&lt;</span> <span class="dv">7200</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> duration, <span class="at">y =</span> waiting)) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"Waiting time to next eruption (seconds)"</span>, <span class="at">x =</span> <span class="st">"Duration (seconds)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-oldfaithful3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oldfaithful3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-oldfaithful3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oldfaithful3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.5: Old Faithful eruption durations and waiting times since 2015, omitting waiting times and durations of two hours or more.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In <a href="#fig-oldfaithful3" class="quarto-xref">Figure&nbsp;<span>1.5</span></a>, we have plotted the duration of each eruption and the waiting time to the next eruption, after filtering some extreme waiting times (which are probably due to incomplete records), and the two-hour duration we have seen previously.</p>
+<p>The resulting plot shows some anomalies that occur due to the <em>combination</em> of the two variables, although they do not appear anomalous within the data on any one of the variables. For example, there is one eruption of 120 seconds, followed by a waiting time of over 6000 seconds. Neither the waiting time nor the duration are unusual on their own, but the combination is anomalous. Similarly, there are two eruptions of 170 seconds, followed by waiting times of under 4000 seconds. Those waiting times are not particularly unusual compared to other waiting times, but they are unusual given the durations of the previous eruptions.</p>
+</section>
+<section id="example-wine-prices-and-quality" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="example-wine-prices-and-quality">Example: Wine prices and quality</h3>
+<p><a href="#fig-shiraz" class="quarto-xref">Figure&nbsp;<span>1.6</span></a> shows a scatterplot of data on 4,496 Syrah wines (also known as Shiraz). The review points is a measure of the quality of the wine (at least according to one taster’s palate). As expected, the price of the wine increases with the quality, although there is considerable variation, and some very expensive wines are rated of relatively low quality, while there are a few exceptional wines at bargain prices.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>wine_reviews <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variety <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Shiraz"</span>, <span class="st">"Syrah"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(points, price) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> price, <span class="at">x =</span> points)) <span class="sc">+</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">height =</span> <span class="dv">0</span>, <span class="at">width =</span> <span class="fl">0.3</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-shiraz" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-shiraz-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-shiraz-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-shiraz-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.6: Wine prices and review points for Shiraz and Syrah wines.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The jittering in the horizontal direction helps reduce overplotting as <code>points</code> is always an integer value. This adds a small amount of random noise to the points variable, but not so much that it overlaps with the neighbouring values. The price is shown on a log scale to allow all the points to be seen more clearly.</p>
+<p>Here the most interesting observations are the ones that have an unusual price given their points value. For example, the lowest priced wine above 95 points is a 2007 Syrah from the Rulo vineyard in the Columbia Valley, Washington. It is an anomaly given its high points value and low price, although neither the price nor the points value are particularly unusual. There are also two very expensive wines that do not have a rating to match, with points values in the low 90s. These can also be considered anomalies.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>wine_reviews <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    variety <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Shiraz"</span>, <span class="st">"Syrah"</span>),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    points <span class="sc">&gt;</span> <span class="dv">95</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(price <span class="sc">==</span> <span class="fu">min</span>(price)) <span class="sc">|&gt;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(country, state, region, winery, variety, year, points, price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 8
+#&gt;   country state      region          winery variety  year points price
+#&gt;   &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;           &lt;chr&gt;  &lt;chr&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 US      Washington Columbia Valley Rulo   Syrah    2007     96    20</code></pre>
+</div>
+</div>
+<p>A similar phenomenon occurs whenever you consider additional variables. An anomaly in three dimensions may not appear anomalous in any of the 2-dimensional sets of variables. As the number of dimensions increases, there are more ways for observations to be anomalous, but it is increasingly difficult to find them.</p>
+<p>While strip plots and scatterplots are useful for finding anomalies in small- to moderate-sized data sets with one or two numerical variables, we will need alternative tools once we have three or more variables, or a large data set, or non-numerical data.</p>
+<p>We will consider the problem of high dimensions in <a href="08-highdim.html" class="quarto-xref">Chapter&nbsp;<span>8</span></a>, while various types of non-numerical data are considered in the later chapters of the book.</p>
+</section>
+<section id="example-synthetic-standard-normal-data" class="level3">
+<h3 class="anchored" data-anchor-id="example-synthetic-standard-normal-data">Example: Synthetic standard normal data</h3>
+<p>When we have many variables, showing the pairwise scatterplots in a matrix is a useful way to see a lot of information quickly. This is called a scatterplot matrix, and can be produced using the <code>GGally</code> package.</p>
+<p><a href="#fig-nn01" class="quarto-xref">Figure&nbsp;<span>1.7</span></a> show the scatterplot matrix of all 10 variables in the <code>n01</code> data set. Some transparency has been used to help reduce the overplotting, but with 1000 observations in each small point cloud, it is hard to see any detail other than around the edges.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>n01 <span class="sc">|&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  GGally<span class="sc">::</span><span class="fu">ggpairs</span>(<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">alpha =</span> <span class="fl">0.02</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-nn01" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nn01-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="01-intro_files/figure-html/fig-nn01-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nn01-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.7: Scatterplots of all pairs of the synthetic <code>n01</code> data, where each variable has been generated from independent standard Normal distributions.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Any points that appear slightly outside the main clouds of points are not genuine anomalies, because they were generated from the same N(0,1) distribution as the rest of the data.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Barnett1978" class="csl-entry" role="listitem">
+Barnett, V, and T Lewis. 1978. <em>Outliers in Statistical Data</em>. John Wiley &amp; Sons.
+</div>
+<div id="ref-Christie2001" class="csl-entry" role="listitem">
+Christie, M. 2001. <em>The Ozone Layer: A Philosophy of Science Perspective</em>. Cambridge, UK: Cambridge University Press.
+</div>
+<div id="ref-christie2004data" class="csl-entry" role="listitem">
+———. 2004. <span>“Data Collection and the Ozone Hole: Too Much of a Good Thing?”</span> <em>History of Meteorology</em> 1: 99–105.
+</div>
+<div id="ref-Farman1985" class="csl-entry" role="listitem">
+Farman, J C, B G Gardiner, and J D Shanklin. 1985. <span>“Large Losses of Total Ozone in <span>Antarctica</span> Reveal Seasonal <span>ClO<span class="math inline">_x</span>/NO<span class="math inline">_x</span></span> Interaction.”</span> <em>Nature</em> 315 (6016): 207–10.
+</div>
+<div id="ref-Hawkins1980" class="csl-entry" role="listitem">
+Hawkins, D M. 1980. <em>Identification of Outliers</em>. Springer.
+</div>
+<div id="ref-Pukelsheim1990" class="csl-entry" role="listitem">
+Pukelsheim, F. 1990. <span>“Robustness of Statistical Gossip and the <span>Antarctic</span> Ozone Hole.”</span> <em>The IMS Bulletin</em> 19 (4): 540–45.
+</div>
+<div id="ref-stolarski1986nimbus" class="csl-entry" role="listitem">
+Stolarski, R S, A J Krueger, M R Schoeberl, R D McPeters, P A Newman, and J C Alpert. 1986. <span>“Nimbus 7 Satellite Measurements of the Springtime <span>Antarctic</span> Ozone Decrease.”</span> <em>Nature</em> 322 (6082): 808–11.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/OTexts\.com\/weird");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="Preface">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./02-univariate.html" class="pagination-link" aria-label="Univariate probability distributions">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Univariate probability distributions</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Published by OTexts using <a href="https://quarto.org">Quarto</a>. <i class="fa-solid fa-copyright" aria-label="copyright"></i> <a href="https://robjhyndman.com">Rob J Hyndman</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
